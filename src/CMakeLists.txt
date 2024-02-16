@@ -21,8 +21,6 @@ set(SOURCES
 set(HEADERS   maltReaderJSON.hpp)
 
 add_executable(malt-qt2 ${SOURCES} ${HEADERS})
-add_library(mcqtStatic STATIC ${SOURCES} ${HEADERS})
-
 
 include_directories(${JSONCPP_DIR}/include)
 target_link_directories(malt-qt2 PRIVATE ${JSONCPP_DIR}/lib)
