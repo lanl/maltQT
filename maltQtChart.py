@@ -1,7 +1,7 @@
 """ simple feedback on a chart """
-from PySide6 import QtGui, QtCore
-from PySide6.QtCore import Qt, QRect, QPointF
-from PySide6.QtCharts import QChart, QChartView, QLineSeries
+from PySide6.QtGui import QColor, QPainter, QPen
+from PySide6.QtCore import QPointF, QRect, QRectF
+from PySide6.QtCharts import QChart, QChartView
 
 
 class MaltQtChart(QChart):
@@ -10,17 +10,10 @@ class MaltQtChart(QChart):
         self.parentx = parentx
 
     def mousePressEvent(self, QMouseEvent):
-        # print mouse position
         self.parentx.click(self.mapToValue(QMouseEvent.pos()))
 
     def mouseMoveEvent(self, QMouseEvent):
         self.parentx.click(self.mapToValue(QMouseEvent.pos()))
-
-    def keyPressEvent(self, e):
-        if e.key() == Qt.key_Enter:
-            print("hello")
-        else:
-            print(dir(e))
 
 
 class maltQChartView(QChartView):
@@ -28,21 +21,18 @@ class maltQChartView(QChartView):
         super().__init__(parentx.chart)
         self.parentx = parentx
 
-    def drawForeground(self, painter: QtGui.QPainter, rect: QtCore.QRectF):
+    def drawForeground(self, painter: QPainter, rect: QRectF):
+        """This is where we draw the red line when the timeline is clicked"""
         super().drawForeground(painter, rect)
         if not self.parentx.markIndex:
             return
         self.parentx.markIndex = True
 
-        pen = QtGui.QPen(QtGui.QColor("red"))
+        pen = QPen(QColor("red"))
         pen.setWidth(0.25)
         painter.setPen(pen)
 
         idx = self.parentx.stackView.model.lastIndex
-        if idx < 0:
-            idx = 0
-        elif idx >= len(self.parentx.values):
-            idx = len(self.parentx.values) - 1
         v = self.parentx.values[idx]
         if len(v) < self.parentx.idxMax:
             return

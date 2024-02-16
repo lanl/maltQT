@@ -1,6 +1,6 @@
 """Create a stack view"""
 
-from PySide6.QtWidgets import QWidget, QHeaderView, QSizePolicy, QTableView
+from PySide6.QtWidgets import QWidget, QTableView
 from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
 from PySide6.QtGui import QColor
 
@@ -8,12 +8,12 @@ from PySide6.QtGui import QColor
 class MaltQtStackTableModel(QAbstractTableModel):
     def __init__(self, stacks=None):
         QAbstractTableModel.__init__(self)
+        self.row_count = 0
         self.column_count = 2
         self.stacks = stacks
         self.lines = []
         self.functions = []
         self.lastIndex = None
-        self.load_data(0)
 
     def shift(self, iShift):
         self.load_data(self.lastIndex + iShift)
@@ -54,22 +54,19 @@ class MaltQtStackTableModel(QAbstractTableModel):
     def data(self, index, role=Qt.DisplayRole):
         column = index.column()
         row = index.row()
-
         if role == Qt.DisplayRole:
             if column == 0:
                 return f"{self.lines[row]}"
             elif column == 1:
                 return self.functions[row]
-
         elif role == Qt.BackgroundRole:
             return QColor(Qt.white)
         elif role == Qt.TextAlignmentRole:
-            return Qt.AlignLeft
+            return Qt.AlignLeft if column == 1 else Qt.AlignRight
         elif role == Qt.ForegroundRole:
             return QColor(Qt.black)
         elif role == Qt.BackgroundRole:
             return QColor(Qt.white)
-
         return None
 
 

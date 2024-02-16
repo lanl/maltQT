@@ -3,21 +3,19 @@ Display timeline information in a Qt Chart with
 clicks to show stack information.
 """
 from PySide6 import QtCore
-from PySide6.QtCore import Qt
-from PySide6 import QtGui
+from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QApplication,
     QHBoxLayout,
-    QVBoxLayout,
     QHeaderView,
     QSizePolicy,
-    QTableView,
-    QWidget,
-    QLabel,
     QTableWidget,
-    QApplication,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
-from PySide6.QtWidgets import QTableWidgetItem
-from PySide6.QtCharts import QChart, QChartView, QLineSeries
+from PySide6.QtCharts import QLineSeries
 from maltQtStack import MaltQtStack
 from maltQtChart import MaltQtChart, maltQChartView
 
@@ -82,14 +80,14 @@ class MaltQtTimeline(QWidget):
     def rightAlignedItem(self, theText):
         """Returns a right aligned table item"""
         item = QTableWidgetItem(theText)
-        item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
         item.setFont("Courier New")
         return item
 
     def leftAlignedItem(self, theText):
         """Returns a right aligned table item"""
         item = QTableWidgetItem(theText)
-        item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        item.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
         item.setFont("Courier New")
         return item
 
@@ -110,11 +108,11 @@ class MaltQtTimeline(QWidget):
             pMem = f"{v[self.idxP] / 1048576.0:.3f}"
             vMem = f"{v[self.idxV] / 1048576.0:.3f}"
             rMem = f"{v[self.idxR] / 1048576.0:.3f}"
-        self.info.setItem(0, 0, self.rightAlignedItem(tIdx))
-        self.info.setItem(1, 0, self.rightAlignedItem(t))
-        self.info.setItem(2, 0, self.rightAlignedItem(pMem))
-        self.info.setItem(3, 0, self.rightAlignedItem(vMem))
-        self.info.setItem(4, 0, self.rightAlignedItem(rMem))
+        self.info.setItem(0, 0, self.rightAlignedItem(t))
+        self.info.setItem(1, 0, self.rightAlignedItem(pMem))
+        self.info.setItem(2, 0, self.rightAlignedItem(vMem))
+        self.info.setItem(3, 0, self.rightAlignedItem(rMem))
+        self.info.setItem(4, 0, self.rightAlignedItem(tIdx))
 
     def __init__(self, parent, data):
         # Initialize the widget
@@ -166,12 +164,9 @@ class MaltQtTimeline(QWidget):
         self.horizontal_header.setStretchLastSection(True)
 
         # Generate chart
-        self.chart_view = QChartView(self.chart)
         self.chart_view = maltQChartView(self)
-        # self.chart_view.setRubberBand(QChartView.HorizontalRubberBand);
-
         self.chart_view.installEventFilter(self)
-        self.chart_view.setRenderHint(QtGui.QPainter.Antialiasing)
+        self.chart_view.setRenderHint(QPainter.Antialiasing)
 
         self.main_layout = QHBoxLayout()
         size = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
@@ -185,8 +180,10 @@ class MaltQtTimeline(QWidget):
         size.setHorizontalStretch(4)
         self.chart_view.setSizePolicy(size)
         lLayout = QVBoxLayout()
-        # self.info = QLabel('Click on chart for memory display')
         self.info = info = QTableWidget()
+        info.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        info.setSelectionMode(QAbstractItemView.NoSelection)
+
         info.setRowCount(5)
         info.setColumnCount(2)
         info.horizontalHeader().hide()
@@ -197,11 +194,11 @@ class MaltQtTimeline(QWidget):
         info.setItem(3, 0, self.rightAlignedItem("Update"))
         info.setItem(4, 0, self.rightAlignedItem("Table"))
 
-        info.setItem(0, 1, self.leftAlignedItem("Index"))
-        info.setItem(1, 1, self.leftAlignedItem("walltime, s"))
-        info.setItem(2, 1, self.leftAlignedItem("physical, MB"))
-        info.setItem(3, 1, self.leftAlignedItem("virtual, MB"))
-        info.setItem(4, 1, self.leftAlignedItem("requested, MB"))
+        info.setItem(0, 1, self.leftAlignedItem("walltime, s"))
+        info.setItem(1, 1, self.leftAlignedItem("physical, MB"))
+        info.setItem(2, 1, self.leftAlignedItem("virtual, MB"))
+        info.setItem(3, 1, self.leftAlignedItem("requested, MB"))
+        info.setItem(4, 1, self.leftAlignedItem("Index"))
         info.horizontalHeader().setStretchLastSection(True)
 
         size.setHorizontalStretch(1)
