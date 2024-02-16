@@ -54,6 +54,6 @@ class maltQChartView(QChartView):
         ratio = (t - hmin) / (hmax - hmin)
         tpos = area.x() + area.width() * ratio
         point = QPointF(tpos, area.y())
-        point2 = QPointF(tpos, area.y() + area.width())
+        point2 = QPointF(tpos, area.y() + area.height())
 
         painter.drawLine(point, point2)
