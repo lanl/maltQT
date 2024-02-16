@@ -26,7 +26,6 @@ add_library(mcqtStatic STATIC ${SOURCES} ${HEADERS})
 
 include_directories(${JSONCPP_DIR}/include)
 target_link_directories(malt-qt2 PRIVATE ${JSONCPP_DIR}/lib)
-MESSAGE(WARNING "target_link_directories(malt-qt2 PRIVATE ${JSONCPP_DIR}/lib})")
 target_link_libraries(malt-qt2 jsoncpp)
 
 # Add Qt specific flags and libraries
