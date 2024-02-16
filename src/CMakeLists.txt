@@ -16,8 +16,9 @@ set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS 1)
 # Specify sources
 set(SOURCES
   test.cpp
+  maltReaderJSON.cpp
   )
-set(HEADERS)
+set(HEADERS   maltReaderJSON.hpp)
 
 add_executable(malt-qt2 ${SOURCES} ${HEADERS})
 add_library(mcqtStatic STATIC ${SOURCES} ${HEADERS})

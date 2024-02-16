@@ -11,13 +11,13 @@ MaltReaderJSON::MaltReaderJSON(const char *fname) : fname_(fname){
   builder["collectComments"] = true;
   JSONCPP_STRING errs;
     
-  if (!parseFromStream(builder, ifs, &data, &errs)) {
+  if (!parseFromStream(builder, ifs, &data_, &errs)) {
     std::cout << errs << std::endl;
   }
 
-  data["sites"]["strings"];
-  instr = data["sites"]["instr"];
-  auto &jNames = data["sites"]["strings"];
+  data_["sites"]["strings"];
+  instr_ = data_["sites"]["instr"];
+  auto &jNames = data_["sites"]["strings"];
   const int nSize = jNames.size();
 
   std::vector<std::string> names; 
@@ -26,30 +26,30 @@ MaltReaderJSON::MaltReaderJSON(const char *fname) : fname_(fname){
     names.push_back(s.asString());
   }
 
-  for (auto const& item : instr.getMemberNames()) {
-    auto &iDict = instr[item];
+  for (auto const& item : instr_.getMemberNames()) {
+    auto &iDict = instr_[item];
     std::string idFile("");
     if (iDict.isMember("file")) {
       idFile = names[iDict["file"].asInt()];
     }
     auto idFunction = names[iDict["function"].asInt()];
     int lineNo = (iDict.isMember("line") ? iDict["line"].asInt() : -1);
-    instrMap[item] = {.function=idFunction, .file=idFile, .line=lineNo};
-    nameMap[idFunction].push_back(item);
+    instrMap_[item] = {.function=idFunction, .file=idFile, .line=lineNo};
+    nameMap_[idFunction].push_back(item);
   }
 }
 
 
 void MaltReaderJSON::print() {
-  for (auto const& id : data.getMemberNames()) {
+  for (auto const& id : data_.getMemberNames()) {
     std::cout << id << std::endl;
   }
-  auto& config = data["config"]["time"];
+  auto& config = data_["config"]["time"];
   std::cout << std::endl << "time:" << std::endl;
   for (auto const& id : config.getMemberNames()) {
     std::cout << id << ":" << config[id] << std::endl;
   }
-  for (auto const &[key,val] : instrMap){
+  for (auto const &[key,val] : instrMap_){
     std::cout << key << ": function=" << val.function << ", file=" << val.file << ", line=" << val.line << std::endl;
   }
 }
