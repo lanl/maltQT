@@ -32,20 +32,13 @@ class MaltQtCore:
         else:
             raise ValueError(f"Unable to load JSON file {fname}")
 
-        # Initialize the application
-        self.app = QtWidgets.QApplication(sys.argv)
-        
         self.window = self.MainWindow(os.path.split(fname)[1])
         self.window.resize(1800, 900)
 
         # Initialize timeline view and display it
         self.tv = MaltQtTimeline(self.window, self.data)
-        self.tv.show()
-        # self.tv.setGeometry(self.window.geometry())
-        # self.tv.move(500,0)
         self.window.show()
         
-        sys.exit(self.app.exec())
     def timelineView(self):
         """Displays the timeline view"""
         self.tView = {}
@@ -55,4 +48,12 @@ class MaltQtCore:
 if __name__ == "__main__":
     import sys
     # generate the window!
-    qtm = MaltQtCore(sys.argv[1])
+    app = QtWidgets.QApplication(sys.argv)
+    qtm = []
+    for f in sys.argv[1:]:
+        try:
+            qtm.append(MaltQtCore(f))
+        except Exception as e:
+            print(e)
+            print(f"Unable to load file {f}")
+    sys.exit(app.exec())
