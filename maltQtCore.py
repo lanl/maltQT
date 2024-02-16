@@ -40,6 +40,8 @@ class MaltQtCore:
         def __init__(self, title="unnamed"):
             super().__init__()
             self.setWindowTitle(title)
+            self.setMinimumWidth(800)
+            self.setMinimumHeight(900)
 
     def __init__(self, fname):
         """
