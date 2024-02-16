@@ -27,9 +27,9 @@ class MaltQtCore:
         reads in the json from file and initializes timeline view
         """
         # First load the data
-        if(1):
+        try:
             self.data = MaltReaderJSON(fname)
-        else:
+        except:
             raise ValueError(f"Unable to load JSON file {fname}")
 
         self.window = self.MainWindow(os.path.split(fname)[1])
@@ -56,4 +56,5 @@ if __name__ == "__main__":
         except Exception as e:
             print(e)
             print(f"Unable to load file {f}")
-    sys.exit(app.exec())
+    if len(qtm) > 0:
+        sys.exit(app.exec())
