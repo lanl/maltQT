@@ -5,7 +5,16 @@ clicks to show stack information.
 from PySide6 import QtCore
 from PySide6.QtCore import Qt
 from PySide6 import QtGui
-from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QHeaderView, QSizePolicy, QTableView, QWidget, QLabel, QTableWidget
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QVBoxLayout,
+    QHeaderView,
+    QSizePolicy,
+    QTableView,
+    QWidget,
+    QLabel,
+    QTableWidget,
+)
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtCharts import QChart, QChartView, QLineSeries
 from maltQtStack import MaltQtStack
@@ -73,14 +82,14 @@ class MaltQtTimeline(QWidget):
         item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
         item.setFont("Courier")
         return item
-    
+
     def leftAlignedItem(self, theText):
         """Returns a right aligned table item"""
         item = QTableWidgetItem(theText)
         item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         item.setFont("Courier")
         return item
-    
+
     def memTableUpdate(self):
         """Updates the information in the memory table"""
         idx = self.stackView.model.lastIndex
@@ -91,18 +100,17 @@ class MaltQtTimeline(QWidget):
 
         v = self.values[idx]
         if len(v) < self.idxMax:
-            t = pMem = vMem = rMem = '??'
+            t = pMem = vMem = rMem = "??"
         else:
-            t = f'{v[self.idxT]:.3f}'
-            pMem = f'{v[self.idxP] / 1048576.0:.3f}'
-            vMem = f'{v[self.idxV] / 1048576.0:.3f}'
-            rMem = f'{v[self.idxR] / 1048576.0:.3f}'
+            t = f"{v[self.idxT]:.3f}"
+            pMem = f"{v[self.idxP] / 1048576.0:.3f}"
+            vMem = f"{v[self.idxV] / 1048576.0:.3f}"
+            rMem = f"{v[self.idxR] / 1048576.0:.3f}"
         self.info.setItem(0, 0, self.rightAlignedItem(t))
         self.info.setItem(1, 0, self.rightAlignedItem(pMem))
         self.info.setItem(2, 0, self.rightAlignedItem(vMem))
         self.info.setItem(3, 0, self.rightAlignedItem(rMem))
-            
-        
+
     def __init__(self, parent, data):
         # Initialize the widget
         super().__init__(parent)
@@ -177,21 +185,20 @@ class MaltQtTimeline(QWidget):
         info.setRowCount(4)
         info.setColumnCount(2)
         info.horizontalHeader().hide()
-        info.setItem(0, 0, self.rightAlignedItem('Click'))
-        info.setItem(1, 0, self.rightAlignedItem('Timeline'))
-        info.setItem(2, 0, self.rightAlignedItem('To'))
-        info.setItem(3, 0, self.rightAlignedItem('Update'))
-        info.setItem(0, 1, self.leftAlignedItem('t, s'))
-        info.setItem(1, 1, self.leftAlignedItem('physical, MB'))
-        info.setItem(2, 1, self.leftAlignedItem('virtual, MB'))
-        info.setItem(3, 1, self.leftAlignedItem('reuested, MB'))
+        info.setItem(0, 0, self.rightAlignedItem("Click"))
+        info.setItem(1, 0, self.rightAlignedItem("Timeline"))
+        info.setItem(2, 0, self.rightAlignedItem("To"))
+        info.setItem(3, 0, self.rightAlignedItem("Update"))
+        info.setItem(0, 1, self.leftAlignedItem("t, s"))
+        info.setItem(1, 1, self.leftAlignedItem("physical, MB"))
+        info.setItem(2, 1, self.leftAlignedItem("virtual, MB"))
+        info.setItem(3, 1, self.leftAlignedItem("reuested, MB"))
         info.horizontalHeader().setStretchLastSection(True)
-
 
         size.setHorizontalStretch(1)
         size.setVerticalStretch(1)
         self.info.setSizePolicy(size)
-        
+
         lLayout.addWidget(self.info)
         lLayout.addWidget(self.table_view)
         self.main_layout.addLayout(lLayout)
