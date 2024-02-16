@@ -39,7 +39,13 @@ class maltQChartView(QChartView):
         painter.setPen(pen)
 
         idx = self.parentx.stackView.model.lastIndex
+        if idx < 0:
+            idx = 0
+        elif idx >= len(self.parentx.values):
+            idx = len(self.parentx.values) - 1
         v = self.parentx.values[idx]
+        if len(v) < self.parentx.idxMax:
+            return
         chart = self.parentx.chart
         area: QRect = chart.plotArea()
         t = float(v[self.parentx.idxT])

@@ -3,8 +3,10 @@ Display timeline information in a Qt Chart with
 clicks to show stack information.
 """
 from PySide6 import QtCore
+from PySide6.QtCore import Qt
 from PySide6 import QtGui
-from PySide6.QtWidgets import QHBoxLayout, QHeaderView, QSizePolicy, QTableView, QWidget
+from PySide6.QtWidgets import QHBoxLayout, QVBoxLayout, QHeaderView, QSizePolicy, QTableView, QWidget, QLabel, QTableWidget
+from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtCharts import QChart, QChartView, QLineSeries
 from maltQtStack import MaltQtStack
 from maltQtChart import MaltQtChart, maltQChartView
@@ -34,7 +36,7 @@ class MaltQtTimeline(QWidget):
     def click(self, p):
         t = p.x()
         idx = self.time.index(min(self.time, key=lambda x: abs(x - t)))
-        print(self.genString(idx))
+        self.memTableUpdate()
         self.markIndex = True
         self.stackView.model.load_data(idx)
         self.chart.update()
@@ -52,25 +54,59 @@ class MaltQtTimeline(QWidget):
             key = event.key()
             if key == QtCore.Qt.Key_Left:
                 self.stackView.model.shift(-1)
-                idx = self.stackView.model.lastIndex
-                print(self.genString(idx))
+                self.memTableUpdate()
                 self.markIndex = True
                 self.chart.update()
                 return True
             elif key == QtCore.Qt.Key_Right:
                 self.stackView.model.shift(1)
-                idx = self.stackView.model.lastIndex
-                print(self.genString(idx))
+                self.memTableUpdate()
                 self.markIndex = True
                 self.chart.update()
                 return True
 
         return QWidget.eventFilter(self, widget, event)
 
+    def rightAlignedItem(self, theText):
+        """Returns a right aligned table item"""
+        item = QTableWidgetItem(theText)
+        item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        item.setFont("Courier")
+        return item
+    
+    def leftAlignedItem(self, theText):
+        """Returns a right aligned table item"""
+        item = QTableWidgetItem(theText)
+        item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        item.setFont("Courier")
+        return item
+    
+    def memTableUpdate(self):
+        """Updates the information in the memory table"""
+        idx = self.stackView.model.lastIndex
+        if idx < 0:
+            idx = 0
+        elif idx >= len(self.values):
+            idx = len(self.values) - 1
+
+        v = self.values[idx]
+        if len(v) < self.idxMax:
+            t = pMem = vMem = rMem = '??'
+        else:
+            t = f'{v[self.idxT]:.3f}'
+            pMem = f'{v[self.idxP] / 1048576.0:.3f}'
+            vMem = f'{v[self.idxV] / 1048576.0:.3f}'
+            rMem = f'{v[self.idxR] / 1048576.0:.3f}'
+        self.info.setItem(0, 0, self.rightAlignedItem(t))
+        self.info.setItem(1, 0, self.rightAlignedItem(pMem))
+        self.info.setItem(2, 0, self.rightAlignedItem(vMem))
+        self.info.setItem(3, 0, self.rightAlignedItem(rMem))
+            
+        
     def __init__(self, parent, data):
         # Initialize the widget
         super().__init__(parent)
-
+        self.mem_view = None
         self.markIndex = False
 
         self.setGeometry(parent.geometry())
@@ -88,7 +124,7 @@ class MaltQtTimeline(QWidget):
         idxP = self.idxP = fields.index("physicalMem")
         idxR = self.idxR = fields.index("requestedMem")
         idxV = self.idxV = fields.index("virtualMem")
-
+        self.idxMax = len(fields)
         self.time = [x[idxT] if idxT < len(x) else -1.0 for x in values]
         self.pMem = self.genSeries("Physical Memory(MB)", idxT, idxP, values, 1048576.0)
         self.rMem = self.genSeries(
@@ -129,12 +165,36 @@ class MaltQtTimeline(QWidget):
 
         # Left layout
         size.setHorizontalStretch(1)
+        size.setVerticalStretch(4)
         self.table_view.setSizePolicy(size)
-        self.main_layout.addWidget(self.table_view)
 
         # Right layout: chart
         size.setHorizontalStretch(4)
         self.chart_view.setSizePolicy(size)
+        lLayout = QVBoxLayout()
+        # self.info = QLabel('Click on chart for memory display')
+        self.info = info = QTableWidget()
+        info.setRowCount(4)
+        info.setColumnCount(2)
+        info.horizontalHeader().hide()
+        info.setItem(0, 0, self.rightAlignedItem('Click'))
+        info.setItem(1, 0, self.rightAlignedItem('Timeline'))
+        info.setItem(2, 0, self.rightAlignedItem('To'))
+        info.setItem(3, 0, self.rightAlignedItem('Update'))
+        info.setItem(0, 1, self.leftAlignedItem('t, s'))
+        info.setItem(1, 1, self.leftAlignedItem('physical, MB'))
+        info.setItem(2, 1, self.leftAlignedItem('virtual, MB'))
+        info.setItem(3, 1, self.leftAlignedItem('reuested, MB'))
+        info.horizontalHeader().setStretchLastSection(True)
+
+
+        size.setHorizontalStretch(1)
+        size.setVerticalStretch(1)
+        self.info.setSizePolicy(size)
+        
+        lLayout.addWidget(self.info)
+        lLayout.addWidget(self.table_view)
+        self.main_layout.addLayout(lLayout)
         self.main_layout.addWidget(self.chart_view)
 
         # Set layout to the QWidget
