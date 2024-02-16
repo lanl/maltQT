@@ -242,7 +242,7 @@ class MaltReaderJSON:
         return retVal
 
     def flattenStack(self, stack):
-        location = ''
+        location = ""
         for s in stack:
             if s in self.instrMap:
                 imap = self.instrMap[s]
@@ -252,27 +252,27 @@ class MaltReaderJSON:
             else:
                 location += f"< ??:{s}"
         return location.strip()
-    
+
     def flattenStackFromId(self, stackId):
         if not stackId in self.callsite:
-            return 'UNKNOWN'
+            return "UNKNOWN"
         return self.flattenStack(self.callsite[stackId])
-        
+
     def getAnnotatedTimeline(self):
         """
         returns the timeline as a dictionary with real time
         in seconds and a flattened stack added to the data.
         """
         timeline = {}
-        timeScale = float(self.data['globals']['ticksPerSecond'])
-        memTimeline = self.data['timeline']['memoryTimeline']
-        delta = float(memTimeline['perPoints']) / timeScale
-        fields = memTimeline['fields']
-        values = memTimeline['values']
-        callsite = memTimeline['callsite']
-        timeline['fields'] = ['t'] + fields + ['stack']
-        timeline['values'] = [[0.,0.,0.,[]]] + [[]] * len(values) 
-        for idx,v in enumerate(values):
+        timeScale = float(self.data["globals"]["ticksPerSecond"])
+        memTimeline = self.data["timeline"]["memoryTimeline"]
+        delta = float(memTimeline["perPoints"]) / timeScale
+        fields = memTimeline["fields"]
+        values = memTimeline["values"]
+        callsite = memTimeline["callsite"]
+        timeline["fields"] = ["t"] + fields + ["stack"]
+        timeline["values"] = [[0.0, 0.0, 0.0, []]] + [[]] * len(values)
+        for idx, v in enumerate(values):
             theSite = callsite[idx]
             if not theSite in self.callsite:
                 stack = [theSite]
@@ -283,47 +283,51 @@ class MaltReaderJSON:
                     if s in self.instrMap:
                         stack.append(self.instrMap[s])
                     else:
-                        stack.append(['??', '??', -1])
-            t = (idx + 1 ) * delta
-            timeline['values'][idx] = [t] + v + [stack]
+                        stack.append(["??", "??", -1])
+            t = (idx + 1) * delta
+            timeline["values"][idx] = [t] + v + [stack]
         return timeline
-    
+
     def dumpTimeline(self, fname):
         """Dumps timeline to CSV file with stacks and time in seconds"""
         from pprint import pprint
+
         if fname is None:
             fp = sys.stdout
         else:
-            fp = open(fname,"w")
-        timeScale = float(self.data['globals']['ticksPerSecond'])
-        memTimeline = self.data['timeline']['memoryTimeline']
+            fp = open(fname, "w")
+        timeScale = float(self.data["globals"]["ticksPerSecond"])
+        memTimeline = self.data["timeline"]["memoryTimeline"]
         print(memTimeline.keys())
-        delta = float(memTimeline['perPoints']) / timeScale
-        fields = memTimeline['fields']
-        values = memTimeline['values']
-        callsite = memTimeline['callsite']
-        fp.write(f'''time(s),request,"{'","'.join(fields)}",location\n''')
+        delta = float(memTimeline["perPoints"]) / timeScale
+        fields = memTimeline["fields"]
+        values = memTimeline["values"]
+        callsite = memTimeline["callsite"]
+        fp.write(f"""time(s),request,"{'","'.join(fields)}",location\n""")
         lastValue = 0
-        for idx,v in enumerate(values):
+        for idx, v in enumerate(values):
             theSite = callsite[idx]
             location = self.flattenStackFromId(theSite)
-            t = (idx + 1 ) * delta
+            t = (idx + 1) * delta
             value = v[0] - lastValue
-            fp.write(f'''{t},{value},{','.join([f"{x}" for x in v])},"{location.strip()}"\n''')
+            fp.write(
+                f"""{t},{value},{','.join([f"{x}" for x in v])},"{location.strip()}"\n"""
+            )
             lastValue = v[0]
-            
+
         if fname is not None:
             fp.close()
-            
+
     def dumpGlobalPeak(self, fname):
         """Dumps Global Peak data to CSV file with stacks"""
         from pprint import pprint
+
         if fname is None:
             fp = sys.stdout
         else:
-            fp = open(fname,"w")
+            fp = open(fname, "w")
         stats = self.data["stacks"]["stats"]
-        fp.write(f'''Memory(MB),location\n''')
+        fp.write(f"""Memory(MB),location\n""")
         for item in stats:
             theStack = item["stack"]
             infos = item["infos"]
@@ -332,30 +336,31 @@ class MaltReaderJSON:
                 continue
             theStackId = item["stackId"]
             location = self.flattenStackFromId(theStackId)
-            fp.write(f'''{float(globalPeak)/1048576.:.3f},"{location}"\n''')
-            
+            fp.write(f"""{float(globalPeak)/1048576.:.3f},"{location}"\n""")
+
         if fname is not None:
             fp.close()
-            
+
     def dumpLeaks(self, fname):
         """Dumps Leaks to CSV file with stacks"""
         from pprint import pprint
+
         if fname is None:
             fp = sys.stdout
         else:
-            fp = open(fname,"w")
+            fp = open(fname, "w")
         leaks = self.data["leaks"]
-        fp.write(f'''Memory(MB),count,location\n''')
+        fp.write(f"""Memory(MB),count,location\n""")
         for item in leaks:
             mem = item["memory"]
             count = item["count"]
             theStack = item["stack"]
             location = self.flattenStack(theStack)
-            fp.write(f'''{float(mem)/1048576.:.3f},{count},"{location}"\n''')
-            
+            fp.write(f"""{float(mem)/1048576.:.3f},{count},"{location}"\n""")
+
         if fname is not None:
             fp.close()
-        
+
 
 if __name__ == "__main__":
     # A couple utility routines and a test program
@@ -412,7 +417,8 @@ if __name__ == "__main__":
     def sortByValueN(theValues, index=0):
         """Returns a list in acending sort for the results"""
         newDict = {
-            f"{value[index]:16.0f}_{key}": value[index] for key, value in theValues.items()
+            f"{value[index]:16.0f}_{key}": value[index]
+            for key, value in theValues.items()
         }
         retList = []
         for key in sorted(newDict.keys()):
@@ -462,7 +468,7 @@ if __name__ == "__main__":
         exclusive = args.exclusive
         filterBy = args.filter
         mt = MaltReaderJSON(fname, filterBy)
-        topN = 10 
+        topN = 10
 
         if args.globalPeaks:
             """Printing values at global peak memory usage"""
@@ -494,8 +500,8 @@ if __name__ == "__main__":
 
         # Dump timeline, global peak information, and leaks to CSV files
         import os
+
         base = os.path.splitext(fname)[0]
         mt.dumpTimeline(f"{base}_timeline.csv")
         mt.dumpGlobalPeak(f"{base}_globalPeak.csv")
         mt.dumpLeaks(f"{base}_leaks.csv")
-            

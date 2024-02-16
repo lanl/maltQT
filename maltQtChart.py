@@ -2,13 +2,15 @@
 from PySide6 import QtGui, QtCore
 from PySide6.QtCore import Qt, QRect, QPointF
 from PySide6.QtCharts import QChart, QChartView, QLineSeries
+
+
 class MaltQtChart(QChart):
     def __init__(self, parentx):
         super().__init__()
         self.parentx = parentx
 
     def mousePressEvent(self, QMouseEvent):
-        #print mouse position
+        # print mouse position
         self.parentx.click(self.mapToValue(QMouseEvent.pos()))
 
     def mouseMoveEvent(self, QMouseEvent):
@@ -16,22 +18,23 @@ class MaltQtChart(QChart):
 
     def keyPressEvent(self, e):
         if e.key() == Qt.key_Enter:
-            print('hello')
+            print("hello")
         else:
             print(dir(e))
+
 
 class maltQChartView(QChartView):
     def __init__(self, parentx):
         super().__init__(parentx.chart)
         self.parentx = parentx
-        
+
     def drawForeground(self, painter: QtGui.QPainter, rect: QtCore.QRectF):
         super().drawForeground(painter, rect)
         if not self.parentx.markIndex:
             return
         self.parentx.markIndex = True
-        
-        pen = QtGui.QPen(QtGui.QColor('red'))
+
+        pen = QtGui.QPen(QtGui.QColor("red"))
         pen.setWidth(0.25)
         painter.setPen(pen)
 
@@ -46,6 +49,5 @@ class maltQChartView(QChartView):
         tpos = area.x() + area.width() * ratio
         point = QPointF(tpos, area.y())
         point2 = QPointF(tpos, area.y() + area.width())
-        
+
         painter.drawLine(point, point2)
-        
