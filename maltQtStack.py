@@ -9,20 +9,34 @@ class MaltQtStackTableModel(QAbstractTableModel):
         QAbstractTableModel.__init__(self)
         self.column_count = 2
         self.stacks = stacks
-        self.lines = [1,2,3]
-        self.functions = ['a', 'b', 'c']
-        self.column_count = 2
-        self.row_count = len(self.lines)
-        self.load_data(13)
-
+        self.lines = []
+        self.functions = []
+        self.lastIndex = 1
+        self.load_data(0)
+        
+    def shift(self, iShift):
+        self.load_data(self.lastIndex + iShift)
+        
     def load_data(self, index):
-        if 0 <= index and index < len(self.stacks):
+
+        if index < 0:
+            index = 0
+        elif index >= len(self.stacks):
+            index =  len(self.stacks) - 1
+            
+        if self.lastIndex != index:
+            self.lastIndex = index
             self.stack = self.stacks[index]
-            self.lines = [x[2] for x in self.stack]
-            self.functions = [x[0] for x in self.stack]
+            if len(self.stack) < 2:
+                self.lines = [-1]
+                self.functions = ['no stack available']
+            else:
+                self.lines = [x[2] for x in self.stack]
+                self.functions = [x[0] for x in self.stack]
             self.column_count = 2
             self.row_count = len(self.lines)
-
+            self.layoutChanged.emit()
+            
     def rowCount(self, parent=QModelIndex()):
         return self.row_count
 
@@ -51,6 +65,10 @@ class MaltQtStackTableModel(QAbstractTableModel):
             return QColor(Qt.white)
         elif role == Qt.TextAlignmentRole:
             return Qt.AlignLeft
+        elif role == Qt.ForegroundRole:
+            return QColor(Qt.black)
+        elif role == Qt.BackgroundRole:
+            return QColor(Qt.white)
 
         return None
 
@@ -61,6 +79,7 @@ class MaltQtStack(QWidget):
 
         self.table_view = QTableView()
         self.table_view.setModel(self.model)
+
 
     def updateStack(self, index):
         self.model.load_data(index)
