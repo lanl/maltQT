@@ -12,7 +12,7 @@ class MaltQtStackTableModel(QAbstractTableModel):
         self.stacks = stacks
         self.lines = []
         self.functions = []
-        self.lastIndex = 1
+        self.lastIndex = None
         self.load_data(0)
 
     def shift(self, iShift):

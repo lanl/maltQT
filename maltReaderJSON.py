@@ -271,7 +271,8 @@ class MaltReaderJSON:
         values = memTimeline["values"]
         callsite = memTimeline["callsite"]
         timeline["fields"] = ["t"] + fields + ["stack"]
-        timeline["values"] = [[0.0, 0.0, 0.0, []]] + [[]] * len(values)
+        # timeline["values"] = [[0.0, 0.0, 0.0, []]] + [[]] * len(values)
+        timeline["values"] = [[]] * len(values)
         for idx, v in enumerate(values):
             theSite = callsite[idx]
             if not theSite in self.callsite:

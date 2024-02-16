@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QWidget,
     QLabel,
     QTableWidget,
+    QApplication,
 )
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtCharts import QChart, QChartView, QLineSeries
@@ -45,9 +46,9 @@ class MaltQtTimeline(QWidget):
     def click(self, p):
         t = p.x()
         idx = self.time.index(min(self.time, key=lambda x: abs(x - t)))
-        self.memTableUpdate()
         self.markIndex = True
         self.stackView.model.load_data(idx)
+        self.memTableUpdate()
         self.chart.update()
 
     def genString(self, idx):
@@ -61,14 +62,16 @@ class MaltQtTimeline(QWidget):
     def eventFilter(self, widget, event):
         if event.type() == QtCore.QEvent.KeyPress and widget is self.chart_view:
             key = event.key()
+            modifiers = QApplication.keyboardModifiers()
+            shift = 10 if modifiers & QtCore.Qt.ShiftModifier else 1
             if key == QtCore.Qt.Key_Left:
-                self.stackView.model.shift(-1)
+                self.stackView.model.shift(-shift)
                 self.memTableUpdate()
                 self.markIndex = True
                 self.chart.update()
                 return True
             elif key == QtCore.Qt.Key_Right:
-                self.stackView.model.shift(1)
+                self.stackView.model.shift(shift)
                 self.memTableUpdate()
                 self.markIndex = True
                 self.chart.update()
@@ -80,14 +83,14 @@ class MaltQtTimeline(QWidget):
         """Returns a right aligned table item"""
         item = QTableWidgetItem(theText)
         item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
-        item.setFont("Courier")
+        item.setFont("Courier New")
         return item
 
     def leftAlignedItem(self, theText):
         """Returns a right aligned table item"""
         item = QTableWidgetItem(theText)
         item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-        item.setFont("Courier")
+        item.setFont("Courier New")
         return item
 
     def memTableUpdate(self):
@@ -100,16 +103,18 @@ class MaltQtTimeline(QWidget):
 
         v = self.values[idx]
         if len(v) < self.idxMax:
-            t = pMem = vMem = rMem = "??"
+            tIdx = t = pMem = vMem = rMem = "??"
         else:
+            tIdx = f"{idx}"
             t = f"{v[self.idxT]:.3f}"
             pMem = f"{v[self.idxP] / 1048576.0:.3f}"
             vMem = f"{v[self.idxV] / 1048576.0:.3f}"
             rMem = f"{v[self.idxR] / 1048576.0:.3f}"
-        self.info.setItem(0, 0, self.rightAlignedItem(t))
-        self.info.setItem(1, 0, self.rightAlignedItem(pMem))
-        self.info.setItem(2, 0, self.rightAlignedItem(vMem))
-        self.info.setItem(3, 0, self.rightAlignedItem(rMem))
+        self.info.setItem(0, 0, self.rightAlignedItem(tIdx))
+        self.info.setItem(1, 0, self.rightAlignedItem(t))
+        self.info.setItem(2, 0, self.rightAlignedItem(pMem))
+        self.info.setItem(3, 0, self.rightAlignedItem(vMem))
+        self.info.setItem(4, 0, self.rightAlignedItem(rMem))
 
     def __init__(self, parent, data):
         # Initialize the widget
@@ -173,7 +178,7 @@ class MaltQtTimeline(QWidget):
 
         # Left layout
         size.setHorizontalStretch(1)
-        size.setVerticalStretch(4)
+        size.setVerticalStretch(27)
         self.table_view.setSizePolicy(size)
 
         # Right layout: chart
@@ -182,21 +187,25 @@ class MaltQtTimeline(QWidget):
         lLayout = QVBoxLayout()
         # self.info = QLabel('Click on chart for memory display')
         self.info = info = QTableWidget()
-        info.setRowCount(4)
+        info.setRowCount(5)
         info.setColumnCount(2)
         info.horizontalHeader().hide()
+        info.verticalHeader().hide()
         info.setItem(0, 0, self.rightAlignedItem("Click"))
         info.setItem(1, 0, self.rightAlignedItem("Timeline"))
         info.setItem(2, 0, self.rightAlignedItem("To"))
         info.setItem(3, 0, self.rightAlignedItem("Update"))
-        info.setItem(0, 1, self.leftAlignedItem("t, s"))
-        info.setItem(1, 1, self.leftAlignedItem("physical, MB"))
-        info.setItem(2, 1, self.leftAlignedItem("virtual, MB"))
-        info.setItem(3, 1, self.leftAlignedItem("reuested, MB"))
+        info.setItem(4, 0, self.rightAlignedItem("Table"))
+
+        info.setItem(0, 1, self.leftAlignedItem("Index"))
+        info.setItem(1, 1, self.leftAlignedItem("walltime, s"))
+        info.setItem(2, 1, self.leftAlignedItem("physical, MB"))
+        info.setItem(3, 1, self.leftAlignedItem("virtual, MB"))
+        info.setItem(4, 1, self.leftAlignedItem("requested, MB"))
         info.horizontalHeader().setStretchLastSection(True)
 
         size.setHorizontalStretch(1)
-        size.setVerticalStretch(1)
+        size.setVerticalStretch(6)
         self.info.setSizePolicy(size)
 
         lLayout.addWidget(self.info)
