@@ -4,6 +4,8 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "json/json.h"
 struct instrMapItem {
@@ -26,6 +28,8 @@ public:
   //> Debug printing of information, will be removed
   void print();
 
+  std::map<std::string,std::pair<size_t,int>>
+  allocsByName(std::string expr, bool exclusive); //< return allocations by name
   Json::Value const &data() { return data_; }   //< access jsoncpp data
   Json::Value const &instr() { return instr_; } //< instr accessor
   std::map<std::string, struct instrMapItem> &instrMap() {

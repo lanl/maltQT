@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <regex>
 #include <sstream>
 
 #include "json/json.h"
@@ -38,7 +39,7 @@ MaltReaderJSON::MaltReaderJSON(const char *fname) : fname_(fname) {
     instrMap_[item] = {.function = idFunction, .file = idFile, .line = lineNo};
     nameMap_[idFunction].push_back(item);
   }
-
+  // Set up rapid lookup index
   index_();
 }
 
@@ -71,12 +72,13 @@ void MaltReaderJSON::index_() {
   // of a subroutine as key and the appropriate memory as value,
   // except for self.globalPeak which is a list with
   // [inclusiveGlobalPeak, exclusiveGlobalPeak] as values
-  std::vector<std::string> ignores({"calloc", "malloc", "posix_memalign",
+  const std::vector<std::string> ignores({"calloc", "malloc", "posix_memalign",
                     "realloc", "operator new(unsigned long)" });
 
   auto &stats = data_["stacks"]["stats"];
-  for (auto &item : stats.getMemberNames()) {
-    auto &infos = stats[item]["infos"];
+  for (Json::Value::ArrayIndex i = 0; i != stats.size(); i++) {
+    auto &item = stats[i];
+    auto &infos = item["infos"];
     int count = infos["alloc"]["count"].asInt();
     size_t glop, inclusive, exclusive;
     std::stringstream(infos["alloc"]["sum"].asString()) >> inclusive;
@@ -85,9 +87,10 @@ void MaltReaderJSON::index_() {
     if (inclusive == 0  and glop == 0) {
       continue;
     }
-    auto &theStack = stats[item]["stack"];
-    auto &theStackId = stats[item]["stackId"];
-    for (auto const &entry : theStack.getMemberNames()) {
+    auto &theStack = item["stack"];
+    auto &theStackId = item["stackId"];
+    for (Json::Value::ArrayIndex j = 0; j != theStack.size(); j++) {
+      auto entry = theStack[j].asString();
       bool a = false;
       for (auto & ignore : ignores) {
 	if (ignore.compare(entry) == 0) {
@@ -95,8 +98,11 @@ void MaltReaderJSON::index_() {
 	  break;
 	}
       }
-      if (a) { continue;}
-
+      if (a ||
+	  (entry.rfind("__gnu_cxx::",0) == 0) ||
+	  (entry.find("/libstdc++/") != entry.npos)) {
+	continue;
+      }
       callsite_[theStackId.asString()].push_back(entry);
       auto &name = instrMap_[entry].function;
       addToIndex_(name, count, inclusive, exclusive, glop);
@@ -109,7 +115,26 @@ void MaltReaderJSON::index_() {
   }
 }
 
+std::map<std::string,std::pair<size_t,int>>
+MaltReaderJSON::allocsByName(const std::string name=std::string("."), bool exclusive=false) {
+  std::map<std::string,std::pair<size_t,int>> retVal;
+  //Given a name, prints all allocations associated by that name
+  auto reFound = std::regex(name, std::regex_constants::icase);
+  auto &base = (exclusive?exclusive_ : inclusive_);
+  for(auto &entry: base) {
+    if (std::regex_search(entry.first, reFound)) {
+      retVal[entry.first] = std::make_pair(entry.second, count_[entry.first]);
+    }
+  }
+  return retVal;
+}
+
 void MaltReaderJSON::print() {
+  auto allocs = allocsByName("teos");
+  for (auto const &entry : allocs) {
+    std::cout << entry.first << ":" << entry.second.first << " count="<< entry.second.second << std::endl;
+  }
+  return;
   for (auto const &id : data_.getMemberNames()) {
     std::cout << id << std::endl;
   }
