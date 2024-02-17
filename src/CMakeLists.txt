@@ -25,6 +25,7 @@ add_executable(malt-qt2 ${SOURCES} ${HEADERS})
 include_directories(${JSONCPP_DIR}/include)
 target_link_directories(malt-qt2 PRIVATE ${JSONCPP_DIR}/lib)
 target_link_libraries(malt-qt2 jsoncpp)
+set_property(TARGET malt-qt2 PROPERTY CXX_STANDARD 11)
 
 # Add Qt specific flags and libraries
 set(CMAKE_AUTOMOC ON)

@@ -1,3 +1,5 @@
+#include <array>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -41,4 +43,14 @@ private:
       instrMap_; //< Lookup for converting instruction to file / function / line
   std::map<std::string, std::vector<std::string>>
       nameMap_; //< Reverse lookup from function to stacks
+  std::map<std::string, int> count_;
+  std::map<std::string, size_t> inclusive_;
+  std::map<std::string, size_t> exclusive_;
+  std::map<std::string, std::array<size_t,2>> globalPeak_;
+  std::map<std::string, std::vector<std::string>> callsite_;
+
+  //Methods
+  void index_(); //< Indexes functions for easy reverse lookup
+  void addToIndex_(std::string name, int count, size_t inclusive,
+				   size_t exclusive, size_t globalPeak);
 };
