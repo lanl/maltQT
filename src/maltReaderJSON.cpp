@@ -37,6 +37,7 @@ MaltReaderJSON::MaltReaderJSON(const char *fname) : fname_(fname) {
     auto idFunction = names[iDict["function"].asInt()];
     int lineNo = (iDict.isMember("line") ? iDict["line"].asInt() : -1);
     instrMap_[item] = {.function = idFunction, .file = idFile, .line = lineNo};
+    instrMap_[idFunction] = {.function = idFunction, .file = idFile, .line = lineNo};
     nameMap_[idFunction].push_back(item);
   }
   // Set up rapid lookup index
@@ -73,7 +74,7 @@ void MaltReaderJSON::index_() {
   // except for self.globalPeak which is a list with
   // [inclusiveGlobalPeak, exclusiveGlobalPeak] as values
   const std::vector<std::string> ignores({"calloc", "malloc", "posix_memalign",
-                    "realloc", "operator new(unsigned long)" });
+      "realloc", "operator new(unsigned long)" });
 
   auto &stats = data_["stacks"]["stats"];
   for (Json::Value::ArrayIndex i = 0; i != stats.size(); i++) {
@@ -91,20 +92,20 @@ void MaltReaderJSON::index_() {
     auto &theStackId = item["stackId"];
     for (Json::Value::ArrayIndex j = 0; j != theStack.size(); j++) {
       auto entry = theStack[j].asString();
+      auto &name = instrMap_[entry].function;
       bool a = false;
       for (auto & ignore : ignores) {
-	if (ignore.compare(entry) == 0) {
+	if (ignore.compare(name) == 0) {
 	  a = true;
 	  break;
 	}
       }
       if (a ||
-	  (entry.rfind("__gnu_cxx::",0) == 0) ||
-	  (entry.find("/libstdc++/") != entry.npos)) {
+	  (name.rfind("__gnu_cxx::",0) == 0) ||
+	  (name.find("/libstdc++/") != entry.npos)) {
 	continue;
       }
-      callsite_[theStackId.asString()].push_back(entry);
-      auto &name = instrMap_[entry].function;
+      callsite_[theStackId.asString()].push_back(name);
       addToIndex_(name, count, inclusive, exclusive, glop);
       exclusive = 0;
     }
@@ -129,11 +130,65 @@ MaltReaderJSON::allocsByName(const std::string name=std::string("."), bool exclu
   return retVal;
 }
 
+
+std::vector<struct TimelineEntry> MaltReaderJSON::getAnnotatedTimeline() {
+  std::vector<struct TimelineEntry> timeline;
+  float timeScale = data_["globals"]["ticksPerSecond"].asFloat();
+  auto &memTimeline = data_["timeline"]["memoryTimeline"];
+  float delta = memTimeline["perPoints"].asFloat()/timeScale;
+  auto &fields = memTimeline["fields"];
+  int idx;
+  int idxP, idxV, idxR;
+  idx = idxP = idxV = idxR = 0;
+  for (auto &v : fields) {
+    if (v == std::string("physicalMem")) {
+      idxP = idx;
+    } else if (v == std::string("virtualMem")) {
+      idxV = idx;
+    } else if (v == std::string("requestedMem")) {
+      idxR = idx;
+    }
+    idx++;
+  }
+  idx = 0;
+  int idxMax =(idxP > idxV ? idxP : idxV);
+  idxMax =(idxMax > idxR ? idxMax : idxR);
+
+  auto &values = memTimeline["values"];
+  auto &callsite = memTimeline["callsite"];
+  for (auto &v : values) {
+    if (v.size() >= idxMax) {
+      float t = float(idx + 1) * delta;
+      std::string theSite = callsite[idx].asString();
+      std::vector<std::string> stack;
+      auto phyM = static_cast<size_t>(v[idxP].asDouble());
+      auto reqM = static_cast<size_t>(v[idxR].asDouble());
+      auto virM = static_cast<size_t>(v[idxV].asDouble());
+      if (callsite_.find(theSite) == callsite_.end()) {
+	stack.push_back(theSite);
+      } else {
+	for (auto & s : callsite_[theSite]) {
+	  stack.push_back(s);
+	}
+      }
+      timeline.push_back({.t=t, .physicalM=phyM, .virtualM=virM, .requestedM=reqM, .stack=stack});
+      idx++;
+    }
+  }
+  return timeline;
+}
+
 void MaltReaderJSON::print() {
   auto allocs = allocsByName("teos");
   for (auto const &entry : allocs) {
     std::cout << entry.first << ":" << entry.second.first << " count="<< entry.second.second << std::endl;
   }
+  std::cout << std::endl << "--------timeline 0---------" << std::endl;
+  auto s = this->getAnnotatedTimeline();
+  for (int i=0; i<5; i++) {
+      std::cout << std::endl << "--------timeline" << i << "---------" << std::endl;
+      s[i].print(std::cout);
+    }
   return;
   for (auto const &id : data_.getMemberNames()) {
     std::cout << id << std::endl;
