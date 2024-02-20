@@ -44,10 +44,11 @@ class MaltQtTimeline(QWidget):
     def click(self, p):
         t = p.x()
         idx = self.time.index(min(self.time, key=lambda x: abs(x - t)))
-        self.markIndex = True
-        self.stackView.model.load_data(idx)
-        self.memTableUpdate()
-        self.chart.update()
+        if idx != self.lastIndex:
+            self.markIndex = True
+            self.memTableUpdate(idx)
+            self.chart.update()
+            self.lastIndex = idx
 
     def genString(self, idx):
         v = self.values[idx]
@@ -63,14 +64,12 @@ class MaltQtTimeline(QWidget):
             modifiers = QApplication.keyboardModifiers()
             shift = 10 if modifiers & QtCore.Qt.ShiftModifier else 1
             if key == QtCore.Qt.Key_Left:
-                self.stackView.model.shift(-shift)
-                self.memTableUpdate()
+                self.memTableUpdate(self.lastIndex - shift)
                 self.markIndex = True
                 self.chart.update()
                 return True
             elif key == QtCore.Qt.Key_Right:
-                self.stackView.model.shift(shift)
-                self.memTableUpdate()
+                self.memTableUpdate(self.lastIndex + shift)
                 self.markIndex = True
                 self.chart.update()
                 return True
@@ -91,15 +90,13 @@ class MaltQtTimeline(QWidget):
         item.setFont("Courier New")
         return item
 
-    def memTableUpdate(self):
+    def memTableUpdate(self, idx):
         """Updates the information in the memory table"""
-        idx = self.stackView.model.lastIndex
+        v = self.values[idx]
         if idx < 0:
             idx = 0
-        elif idx >= len(self.values):
-            idx = len(self.values) - 1
-
-        v = self.values[idx]
+        elif idx >= len(self.stacks):
+            idx = len(self.stacks) - 1
         if len(v) < self.idxMax:
             tIdx = t = pMem = vMem = rMem = "??"
         else:
@@ -108,6 +105,8 @@ class MaltQtTimeline(QWidget):
             pMem = f"{v[self.idxP] / 1048576.0:.3f}"
             vMem = f"{v[self.idxV] / 1048576.0:.3f}"
             rMem = f"{v[self.idxR] / 1048576.0:.3f}"
+        self.lastIndex = idx
+        self.stackView.model.load_data(self.stacks[idx], idx)
         self.info.setItem(0, 0, self.rightAlignedItem(t))
         self.info.setItem(1, 0, self.rightAlignedItem(pMem))
         self.info.setItem(2, 0, self.rightAlignedItem(vMem))
@@ -119,6 +118,7 @@ class MaltQtTimeline(QWidget):
         super().__init__(parent)
         self.mem_view = None
         self.markIndex = False
+        self.lastIndex = None
 
         self.setGeometry(parent.geometry())
         # self.setGeometry((2 * parent.width())/3, 0, parent.width()/2, parent.height())
@@ -153,7 +153,7 @@ class MaltQtTimeline(QWidget):
         # QWidget Layout
 
         # Left layout: stacks
-        self.stackView = MaltQtStack(self.stacks)
+        self.stackView = MaltQtStack()
         self.table_view = self.stackView.table_view
 
         resize = QHeaderView.ResizeToContents

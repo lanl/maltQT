@@ -6,33 +6,22 @@ from PySide6.QtGui import QColor
 
 
 class MaltQtStackTableModel(QAbstractTableModel):
-    def __init__(self, stacks=None):
+    def __init__(self):
         QAbstractTableModel.__init__(self)
         self.row_count = 0
         self.column_count = 2
-        self.stacks = stacks
         self.lines = []
         self.functions = []
         self.lastIndex = None
 
-    def shift(self, iShift):
-        self.load_data(self.lastIndex + iShift)
-
-    def load_data(self, index):
-        if index < 0:
-            index = 0
-        elif index >= len(self.stacks):
-            index = len(self.stacks) - 1
-
+    def load_data(self, stack, index):
         if self.lastIndex != index:
-            self.lastIndex = index
-            self.stack = self.stacks[index]
-            if len(self.stack) < 2:
+            if len(stack) < 2:
                 self.lines = [-1]
                 self.functions = ["no stack available"]
             else:
-                self.lines = [x[2] for x in self.stack]
-                self.functions = [x[0] for x in self.stack]
+                self.lines = [x[2] for x in stack]
+                self.functions = [x[0] for x in stack]
             self.column_count = 2
             self.row_count = len(self.lines)
             self.layoutChanged.emit()
@@ -71,15 +60,15 @@ class MaltQtStackTableModel(QAbstractTableModel):
 
 
 class MaltQtStack(QWidget):
-    def __init__(self, stackList):
+    def __init__(self):
         super().__init__()
-        self.model = MaltQtStackTableModel(stackList)
+        self.model = MaltQtStackTableModel()
 
         self.table_view = QTableView()
         self.table_view.setModel(self.model)
 
-    def updateStack(self, index):
-        self.model.load_data(index)
+    def updateStack(self, stack, index):
+        self.model.load_data(stack, index)
 
     def horizontalHeader(self):
         return self.table_view.horizontalHeader()

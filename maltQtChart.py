@@ -32,7 +32,7 @@ class maltQChartView(QChartView):
         pen.setWidth(0.25)
         painter.setPen(pen)
 
-        idx = self.parentx.stackView.model.lastIndex
+        idx = self.parentx.lastIndex
         v = self.parentx.values[idx]
         if len(v) < self.parentx.idxMax:
             return

@@ -98,7 +98,7 @@ class MaltReaderJSON:
             lineNo = iDict["line"] if "line" in iDict else -1
             myFile = self.names[idFile] if idFile is not None else "Unknown"
             myFunction = self.names[idFunction]
-            instrMap[item] = [myFunction, myFile, lineNo]
+            instrMap[item] = instrMap[myFunction] = [myFunction, myFile, lineNo, item]
             if myFunction not in nameMap:
                 nameMap[myFunction] = []
             nameMap[myFunction].append(item)
