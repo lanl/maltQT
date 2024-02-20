@@ -49,6 +49,9 @@ class MaltQtCore:
         self.window.setCentralWidget(tabs)
         self.window.show()
 
+        # Set focus to the searchbox in the timeline
+        self.tv.searchBox.setFocus()
+
 
 if __name__ == "__main__":
     import sys
@@ -62,5 +65,6 @@ if __name__ == "__main__":
         except Exception as e:
             print(e)
             print(f"Unable to load file {f}")
+            raise e
     if len(qtm) > 0:
         sys.exit(app.exec())
