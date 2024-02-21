@@ -319,6 +319,22 @@ class MaltReaderJSON:
         if fname is not None:
             fp.close()
 
+    def globalPeaks(self):
+        """Returns the information at global peak"""
+        retDict = {}
+        stats = self.data["stacks"]["stats"]
+        for item in stats:
+            theStack = item["stack"]
+            theStackId = item["stackId"]
+            infos = item["infos"]
+            globalPeak = infos["globalPeak"]
+            if globalPeak == 0:
+                continue
+            stack = [self.instrMap[s] for s in theStack]
+            if len(stack) > 0:
+                retDict[theStackId] = {'top':stack[0][0], 'memory':globalPeak, 'stack':stack}
+        return retDict
+            
     def dumpGlobalPeak(self, fname):
         """Dumps Global Peak data to CSV file with stacks"""
         from pprint import pprint

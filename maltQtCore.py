@@ -12,6 +12,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget
 
 from maltReaderJSON import MaltReaderJSON
 from maltQtTimeline import MaltQtTimeline
+from maltQtGlobalMax import MaltQtGlobalMax
 
 
 class MaltQtCore:
@@ -42,9 +43,10 @@ class MaltQtCore:
         tabs.setDocumentMode(True)
 
         # Initialize timeline view and display it
+        self.gm = MaltQtGlobalMax(self.window, self.data)
+        tabs.addTab(self.gm, "globalMax")
         self.tv = MaltQtTimeline(self.window, self.data)
         tabs.addTab(self.tv, "Timeline")
-
         # Attach tab to window
         self.window.setCentralWidget(tabs)
         self.window.show()
