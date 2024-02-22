@@ -1,12 +1,11 @@
 """
-Display Global peak Memory information.
-Click to show stack information.
+Display timeline information in a Qt Chart with
+clicks to show stack information.
 """
 import re
 from PySide6.QtCore import Slot, Qt
 from PySide6.QtWidgets import (
     QAbstractItemView,
-    QApplication,
     QHBoxLayout,
     QSizePolicy,
     QTableWidget,
@@ -19,8 +18,8 @@ from maltQtStack import MaltQtStack
 from maltQtFile import MaltQtFile
 
 
-class MaltQtGlobalMax(QWidget):
-    """Creates a Global Peak Memory Usage information widget"""
+class MaltQtLeaks(QWidget):
+    """Creates a Memory Leak information widget"""
 
     def __init__(self, data):
         # Initialize the widget
@@ -28,32 +27,44 @@ class MaltQtGlobalMax(QWidget):
 
         # Squirrel away data
         self.data = data
-        peaks = self.peaks = data.globalPeaks()
+        leaks = self.leaks = data.leaks
         self.info = info = QTableWidget()
         size = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         size.setHorizontalStretch(1)
         info.setSizePolicy(size)
         info.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        info.setRowCount(len(peaks.keys()))
-        info.setColumnCount(3)
-        info.setHorizontalHeaderLabels(["memory (MB)", "location", "stackId"])
+        info.setRowCount(len(leaks))
+        info.setColumnCount(4)
+        info.setHorizontalHeaderLabels(["memory (kB)", "count", "location", "index"])
         info.setFont("Courier New")
         alignFlags = Qt.AlignRight | Qt.AlignVCenter
         info.horizontalHeaderItem(0).setTextAlignment(alignFlags)
+        info.horizontalHeaderItem(1).setTextAlignment(alignFlags)
         alignFlags = Qt.AlignLeft | Qt.AlignVCenter
         info.horizontalHeaderItem(1).setTextAlignment(alignFlags)
-        sumGP = 0
-        for idx, p in enumerate(peaks.keys()):
-            s = peaks[p]
+        sumLeak = 0
+        instrMap = self.data.instrMap
+        for idx, p in enumerate(leaks):
+            sumLeak += p["memory"]
+            count = f"{p['count']}"
+            memory = f"{float(p['memory'])/1024.:>12.3f}"
+            stack = p["stack"]
+            stackName = (
+                "no stack"
+                if len(stack) == 0
+                else (instrMap[stack[0]][0] if stack[0] in instrMap else stack[0])
+            )
             memItem = QTableWidgetItem()
-            memItem.setData(Qt.DisplayRole, f"{float(s['memory'])/1048576.:>8.3f}")
+            memItem.setData(Qt.DisplayRole, memory)
             memItem.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
-            sumGP += s["memory"]
+            indexItem = QTableWidgetItem()
+            indexItem.setData(Qt.DisplayRole, idx)
             info.setItem(idx, 0, memItem)
-            info.setItem(idx, 1, leftAlignedItem(s["top"]))
-            info.setItem(idx, 2, leftAlignedItem(p))
-        info.setColumnHidden(2, True)
-        print("Sum at global peak:", sumGP, sumGP / 1048576.0, "MB")
+            info.setItem(idx, 1, leftAlignedItem(count))
+            info.setItem(idx, 2, leftAlignedItem(stackName))
+            info.setItem(idx, 3, indexItem)
+        info.setColumnHidden(3, True)
+        print("Sum of all leaks:", sumLeak, sumLeak / 1048576.0, "MB")
         info.setSortingEnabled(True)
         info.sortItems(0, Qt.DescendingOrder)
         info.cellClicked.connect(self.cellClick)
@@ -71,15 +82,12 @@ class MaltQtGlobalMax(QWidget):
         self.fileArea = MaltQtFile()
         self.fileArea.setSizePolicy(size)
 
-        # Widgets are created, now lay them out
-        self.lLayout = lLayout = QVBoxLayout()
-        self.lLayout.addWidget(info)
-        
         self.rLayout = rLayout = QVBoxLayout()
         rLayout.addWidget(self.fileArea)
         rLayout.addWidget(self.stack)
-        
         self.main_layout = QHBoxLayout()
+        self.lLayout = lLayout = QVBoxLayout()
+        self.lLayout.addWidget(info)
         self.main_layout.addLayout(lLayout)
         self.main_layout.addLayout(rLayout)
         self.setLayout(self.main_layout)
@@ -90,13 +98,12 @@ class MaltQtGlobalMax(QWidget):
     @Slot()
     def cellClick(self, row, column):
         self.info.selectRow(row)
-        stackId = self.info.item(row, 2).text()
-        if stackId in self.data.callsite:
-            stack = [self.data.instrMap[x] for x in self.data.callsite[stackId]]
-            self.stack.updateStack(stack, row, stackId)
-            self.fileShow(0, 0)
-        else:
-            self.stack.update(None, None)
+        print("type of ", type(self.info.item(row, 3)))
+        index = int(self.info.item(row, 3).text())
+        stackIdList = self.leaks[index]["stack"]
+        stack = [self.data.instrMap[x] for x in stackIdList]
+        self.stack.updateStack(stack, row, index)
+        self.fileShow(0, 0)
 
     @Slot()
     def fileShow(self, row, column):

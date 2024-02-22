@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 from maltReaderJSON import MaltReaderJSON
 from maltQtTimeline import MaltQtTimeline
 from maltQtGlobalMax import MaltQtGlobalMax
+from maltQtLeaks import MaltQtLeaks
 from maltQtPreferences import MaltQtPreferences
 
 
@@ -48,17 +49,19 @@ class MaltQtCore:
         tabs.setMovable(True)
         tabs.setDocumentMode(True)
 
-        tabs.setStyleSheet("QTabBar {font-size:16pt;background-color:rgb(255,255,230)}")
         tabs.setStyleSheet(
+            """QTabBar::tab:selected {font-size:18pt;background-color:rgb(255,255,230)} 
+               QTabBar::tab:!selected {font-size:12pt;background-color:rgb(230,230,230)} 
             """
-        QTabBar::tab:selected {font-size:18pt;background-color:rgb(255,255,230)} 
-        QTabBar::tab:!selected {font-size:12pt;background-color:rgb(230,230,230)} 
-        """
         )
 
         # Now add different tabs
-        self.gm = MaltQtGlobalMax(self.window, self.data)
-        tabs.addTab(self.gm, " &GlobalMax")
+        # A tab for stacks at global maximum
+        self.gm = MaltQtGlobalMax(self.data)
+        tabs.addTab(self.gm, " &Global Peak Stacks")
+
+        self.leaks = MaltQtLeaks(self.data)
+        tabs.addTab(self.leaks, " &Leaks")
 
         self.tv = MaltQtTimeline(self.window, self.data)
         tabs.addTab(self.tv, " &Timeline")

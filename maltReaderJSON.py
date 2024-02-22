@@ -79,6 +79,7 @@ class MaltReaderJSON:
         with open(fname, "r") as fp:
             data = json.load(fp)
         self.data = data
+        self.leaks = data["leaks"]
         self.names = self.data["sites"]["strings"]
         self.instr = instr = self.data["sites"]["instr"]
         self.count = {}
