@@ -1,77 +1,50 @@
 """Create a stack view"""
 
-from PySide6.QtWidgets import QWidget, QTableView
-from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
-from PySide6.QtGui import QColor
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QTableWidget, QTableWidgetItem
 
 
-class MaltQtStackTableModel(QAbstractTableModel):
-    def __init__(self):
-        QAbstractTableModel.__init__(self)
-        self.row_count = 0
-        self.column_count = 2
-        self.lines = []
-        self.functions = []
-        self.lastIndex = None
-
-    def load_data(self, stack, index):
-        if self.lastIndex != index:
-            if len(stack) < 2:
-                self.lines = [-1]
-                self.functions = ["no stack available"]
-            else:
-                self.lines = [x[2] for x in stack]
-                self.functions = [x[0] for x in stack]
-            self.column_count = 2
-            self.row_count = len(self.lines)
-            self.layoutChanged.emit()
-
-    def rowCount(self, parent=QModelIndex()):
-        return self.row_count
-
-    def columnCount(self, parent=QModelIndex()):
-        return self.column_count
-
-    def headerData(self, section, orientation, role):
-        if role != Qt.DisplayRole:
-            return None
-        if orientation == Qt.Horizontal:
-            return ("Line", "Function")[section]
-        else:
-            return f"{section}"
-
-    def data(self, index, role=Qt.DisplayRole):
-        column = index.column()
-        row = index.row()
-        if role == Qt.DisplayRole:
-            if column == 0:
-                return f"{self.lines[row]}"
-            elif column == 1:
-                return self.functions[row]
-        elif role == Qt.BackgroundRole:
-            return QColor(Qt.white)
-        elif role == Qt.TextAlignmentRole:
-            return Qt.AlignLeft if column == 1 else Qt.AlignRight
-        elif role == Qt.ForegroundRole:
-            return QColor(Qt.black)
-        elif role == Qt.BackgroundRole:
-            return QColor(Qt.white)
-        return None
-
-
-class MaltQtStack(QWidget):
+class MaltQtStack(QTableWidget):
     def __init__(self):
         super().__init__()
-        self.model = MaltQtStackTableModel()
+        self.setColumnCount(3)
+        self.setRowCount(0)
+        self.headers = ["line", "location", "stackId"]
+        self.setHorizontalHeaderLabels(self.headers)
+        self.setTextElideMode(Qt.ElideNone)
+        self.setWordWrap(True)
+        self.setColumnHidden(2, True)
+        self.lastIndex = None
+        self.colIndex = [2, 0, 3]
+        self.setFont("Courier New")
 
-        self.table_view = QTableView()
-        self.table_view.setModel(self.model)
+    def setRow(self, idx, data):
+        alignFlags = Qt.AlignRight | Qt.AlignVCenter
+        for icol in range(3):
+            jcol = self.colIndex[icol]
+            item = QTableWidgetItem(f"{data[jcol]}")
+            item.setToolTip(f"{data[jcol]}\n{data[1]}")
+            item.setTextAlignment(alignFlags)
+            self.setItem(idx, icol, item)
+            alignFlags = (
+                Qt.AlignLeft | Qt.AlignVCenter
+            )  # only first column is right aligned
 
-    def updateStack(self, stack, index):
-        self.model.load_data(stack, index)
-
-    def horizontalHeader(self):
-        return self.table_view.horizontalHeader()
-
-    def verticalHeader(self):
-        return self.table_view.verticalHeader()
+    def updateStack(self, stack, index, name=None):
+        if name is not None:
+            self.headers[1] = f'Stack = "{name}"'
+            self.setHorizontalHeaderLabels(self.headers)
+            alignFlags = Qt.AlignRight | Qt.AlignVCenter
+            self.horizontalHeaderItem(0).setTextAlignment(alignFlags)
+            alignFlags = Qt.AlignLeft | Qt.AlignVCenter
+            self.horizontalHeaderItem(1).setTextAlignment(alignFlags)
+        if self.lastIndex != index:
+            self.setRowCount(0)
+            self.lastIndex = index
+            if stack is None or len(stack) < 2:
+                self.setRowCount(1)
+                self.setRow(0, ["no stack", "??", "-1", "??"])
+            else:
+                self.setRowCount(len(stack))
+                for idx, x in enumerate(stack):
+                    self.setRow(idx, x)

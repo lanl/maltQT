@@ -66,7 +66,7 @@ class MaltQtTimeline(QWidget):
         if event.type() == QtCore.QEvent.KeyPress and widget is self.chart_view:
             key = event.key()
             modifiers = QApplication.keyboardModifiers()
-            shift = 10 if modifiers & QtCore.Qt.ShiftModifier else 1
+            shift = 10 if modifiers & QtCore.Qt.AltModifier else 1
             if key == QtCore.Qt.Key_Left:
                 self.memTableUpdate(self.lastIndex - shift)
                 self.markIndex = True
@@ -110,7 +110,7 @@ class MaltQtTimeline(QWidget):
             vMem = f"{v[self.idxV] / 1048576.0:.3f}"
             rMem = f"{v[self.idxR] / 1048576.0:.3f}"
         self.lastIndex = idx
-        self.stackView.model.load_data(self.stacks[idx], idx)
+        self.stack_view.updateStack(self.stacks[idx], idx)
         self.markIndex = True
         self.chart.update()
         self.info.setItem(0, 0, self.rightAlignedItem(t))
@@ -160,12 +160,11 @@ class MaltQtTimeline(QWidget):
         # QWidget Layout
 
         # Left layout: stacks
-        self.stackView = MaltQtStack()
-        self.table_view = self.stackView.table_view
+        self.stack_view = MaltQtStack()
 
         resize = QHeaderView.ResizeToContents
-        self.horizontal_header = self.table_view.horizontalHeader()
-        self.vertical_header = self.table_view.verticalHeader()
+        self.horizontal_header = self.stack_view.horizontalHeader()
+        self.vertical_header = self.stack_view.verticalHeader()
         self.horizontal_header.setSectionResizeMode(resize)
         self.vertical_header.setSectionResizeMode(resize)
         self.horizontal_header.setStretchLastSection(True)
@@ -175,15 +174,15 @@ class MaltQtTimeline(QWidget):
         self.chart_view.installEventFilter(self)
         self.chart_view.setRenderHint(QPainter.Antialiasing)
 
+        self.chart_view.setAttribute(QtCore.Qt.WA_MacShowFocusRect)
         self.searchBox = QLineEdit()
-
         self.main_layout = QHBoxLayout()
         size = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
 
         # Left layout
         size.setHorizontalStretch(1)
         size.setVerticalStretch(27)
-        self.table_view.setSizePolicy(size)
+        self.stack_view.setSizePolicy(size)
 
         # Right layout: chart
         size.setHorizontalStretch(4)
@@ -215,7 +214,7 @@ class MaltQtTimeline(QWidget):
         self.info.setSizePolicy(size)
 
         lLayout.addWidget(self.info)
-        lLayout.addWidget(self.table_view)
+        lLayout.addWidget(self.stack_view)
         self.main_layout.addLayout(lLayout)
 
         rLayout = QVBoxLayout()
@@ -247,11 +246,12 @@ class MaltQtTimeline(QWidget):
         trace on left.  This will also draw a red line to show you
         where in the timeline you are.  After clicking once, you can
         use the left and right arrow keys to traverse the timeline.
-        Keeping shift key pressed while pressing arrow keys will
+        Keeping Alt key pressed while pressing arrow keys will
         increase / decrease the index by 10 instead of 1.
 
         Also check out the search box below for identifying specific
-        routines or files.
+        routines or files.  Use "Tab" to switch back and forth between
+        the chart and the search box.
         """
         )
         self.searchBox.setToolTip(
@@ -260,11 +260,14 @@ class MaltQtTimeline(QWidget):
         second after you stop typing, or when you hit enter.
 
         Hitting enter repeatedly will go to the next entry.
-        Keeping shift key pressed will skip by 10 entries.
+        Keeping Alt key pressed will skip by 10 entries.
 
-        Keeping Alt key pressed will search backwards in time.
+        Keeping Shift key pressed will search backwards in time.
         Keeping Shift-Alt key pressed will skip backwards by 10
         entries.
+
+        Use the "Tab" key to swap between the chart view and the
+        search box.
         """
         )
 
@@ -273,7 +276,10 @@ class MaltQtTimeline(QWidget):
         self.mTimer = mTimer = QtCore.QTimer()
         mTimer.setSingleShot(True)
         mTimer.timeout.connect(self.filterStack)
+        self.stack_view.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.info.setFocusPolicy(QtCore.Qt.NoFocus)
         self.ifilter = 0
+        self.memTableUpdate(0)
 
     def filterStack(self):
         """Using the contents of the searchbox will filter the current
@@ -287,7 +293,7 @@ class MaltQtTimeline(QWidget):
             self.nextB.setEnabled(False)
             return
         elif text == self.lastText:
-            if QApplication.queryKeyboardModifiers() & QtCore.Qt.AltModifier:
+            if QApplication.queryKeyboardModifiers() & QtCore.Qt.ShiftModifier:
                 self.filterPrev()
             else:
                 self.filterNext()
@@ -319,7 +325,7 @@ class MaltQtTimeline(QWidget):
         if len(self.filterIds) == 0:
             return
         self.ifilter += (
-            10 if QApplication.queryKeyboardModifiers() & QtCore.Qt.ShiftModifier else 1
+            10 if QApplication.queryKeyboardModifiers() & QtCore.Qt.AltModifier else 1
         )
         if self.ifilter > len(self.filterIds) - 1:
             self.ifilter = len(self.filterIds) - 1
@@ -334,7 +340,7 @@ class MaltQtTimeline(QWidget):
         if len(self.filterIds) == 0:
             return
         self.ifilter -= (
-            10 if QApplication.queryKeyboardModifiers() & QtCore.Qt.ShiftModifier else 1
+            10 if QApplication.queryKeyboardModifiers() & QtCore.Qt.AltModifier else 1
         )
         if self.ifilter < 0:
             self.ifilter = 0

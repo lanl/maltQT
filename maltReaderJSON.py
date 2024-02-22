@@ -75,6 +75,7 @@ class MaltReaderJSON:
         # Read the data
         print(f"Reading {fname}")
         data = None
+        reDemangle = re.compile("\([^\)]*\)")
         with open(fname, "r") as fp:
             data = json.load(fp)
         self.data = data
@@ -98,7 +99,8 @@ class MaltReaderJSON:
             lineNo = iDict["line"] if "line" in iDict else -1
             myFile = self.names[idFile] if idFile is not None else "Unknown"
             myFunction = self.names[idFunction]
-            instrMap[item] = instrMap[myFunction] = [myFunction, myFile, lineNo, item]
+            myName = reDemangle.sub("()", myFunction)
+            instrMap[item] = instrMap[myFunction] = [myName, myFile, lineNo, item]
             if myFunction not in nameMap:
                 nameMap[myFunction] = []
             nameMap[myFunction].append(item)
@@ -332,9 +334,13 @@ class MaltReaderJSON:
                 continue
             stack = [self.instrMap[s] for s in theStack]
             if len(stack) > 0:
-                retDict[theStackId] = {'top':stack[0][0], 'memory':globalPeak, 'stack':stack}
+                retDict[theStackId] = {
+                    "top": stack[0][0],
+                    "memory": globalPeak,
+                    "stack": stack,
+                }
         return retDict
-            
+
     def dumpGlobalPeak(self, fname):
         """Dumps Global Peak data to CSV file with stacks"""
         from pprint import pprint

@@ -8,6 +8,7 @@ Author: Sriram Swaminarayan sriram@lanl.gov
 
 import os
 import sys
+from PySide6 import QtGui
 from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget
 
 from maltReaderJSON import MaltReaderJSON
@@ -35,7 +36,7 @@ class MaltQtCore:
 
         self.window = self.MainWindow(os.path.split(fname)[1])
         self.window.resize(1800, 900)
-
+        QtGui.qt_set_sequence_auto_mnemonic(True)
         # set layout of main window
         tabs = QTabWidget()
         tabs.setTabPosition(QTabWidget.West)
@@ -44,15 +45,22 @@ class MaltQtCore:
 
         # Initialize timeline view and display it
         self.gm = MaltQtGlobalMax(self.window, self.data)
-        tabs.addTab(self.gm, "globalMax")
+        tabs.setStyleSheet(
+            "QTabBar::tab:!selected {font-size:14pt;background-color:rgb(200,200,200)}"
+        )
+        tabs.setStyleSheet(
+            "QTabBar::tab:selected {font-size:16pt;background-color:rgb(255,255,230)}"
+        )
+        tabs.addTab(self.gm, "&GlobalMax")
         self.tv = MaltQtTimeline(self.window, self.data)
-        tabs.addTab(self.tv, "Timeline")
+        tabs.addTab(self.tv, "&Timeline")
         # Attach tab to window
         self.window.setCentralWidget(tabs)
         self.window.show()
 
         # Set focus to the searchbox in the timeline
-        self.tv.searchBox.setFocus()
+        # self.tv.searchBox.setFocus()
+        self.tv.chart_view.setFocus()
 
 
 if __name__ == "__main__":

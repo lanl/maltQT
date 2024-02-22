@@ -2,7 +2,7 @@
 Display timeline information in a Qt Chart with
 clicks to show stack information.
 """
-from PySide6 import QtCore
+from PySide6.QtCore import Slot, Qt
 from PySide6.QtGui import QPainter, QIcon
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -20,13 +20,14 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCharts import QLineSeries
 from maltQtStack import MaltQtStack
+from maltQtFile import MaltQtFile
 import re
 
 
 class MaltQtGlobalMax(QWidget):
     """Creates a timeline widget"""
 
-    @QtCore.Slot()
+    @Slot()
     def click(self, p):
         t = p.x()
         idx = self.time.index(min(self.time, key=lambda x: abs(x - t)))
@@ -47,15 +48,13 @@ class MaltQtGlobalMax(QWidget):
     def rightAlignedItem(self, theText):
         """Returns a right aligned table item"""
         item = QTableWidgetItem(theText)
-        item.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-        item.setFont("Courier New")
+        item.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
         return item
 
     def leftAlignedItem(self, theText):
         """Returns a right aligned table item"""
         item = QTableWidgetItem(theText)
-        item.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-        item.setFont("Courier New")
+        item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
         return item
 
     def memTableUpdate(self, idx):
@@ -92,42 +91,63 @@ class MaltQtGlobalMax(QWidget):
         self.lastIndex = None
 
         self.setGeometry(parent.geometry())
-
         # Squirrel away data
+        self.data = data
         peaks = self.peaks = data.globalPeaks()
-
         self.info = info = QTableWidget()
         size = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         size.setHorizontalStretch(1)
-        size.setVerticalStretch(6)
         self.info.setSizePolicy(size)
         info.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        info.setSelectionMode(QAbstractItemView.NoSelection)
         info.setRowCount(len(peaks.keys()))
-        info.setColumnCount(2)
-        info.setHorizontalHeaderLabels(['memory (MB)', 'location'])
-        #info.horizontalHeader().hide()
-        #info.verticalHeader().hide()
+        info.setColumnCount(3)
+        info.setHorizontalHeaderLabels(["memory (MB)", "location", "stackId"])
+        info.setFont("Courier New")
+        alignFlags = Qt.AlignRight | Qt.AlignVCenter
+        info.horizontalHeaderItem(0).setTextAlignment(alignFlags)
+        alignFlags = Qt.AlignLeft | Qt.AlignVCenter
+        info.horizontalHeaderItem(1).setTextAlignment(alignFlags)
         sumGP = 0
-        for idx,p in enumerate(peaks.keys()):
+        for idx, p in enumerate(peaks.keys()):
             s = peaks[p]
             memItem = QTableWidgetItem()
-            memItem.setData(QtCore.Qt.DisplayRole,s['memory'])
-            memItem.setTextAlignment(QtCore.Qt.AlignRight | QtCore.Qt.AlignVCenter)
-            sumGP += s['memory']
-            info.setItem(idx,0,memItem)
-            info.setItem(idx,1, self.leftAlignedItem(s['top']))
-        print(sumGP, sumGP/1048576.,'MB')
+            memItem.setData(Qt.DisplayRole, f"{float(s['memory'])/1048576.:>8.3f}")
+            memItem.setTextAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            sumGP += s["memory"]
+            info.setItem(idx, 0, memItem)
+            info.setItem(idx, 1, self.leftAlignedItem(s["top"]))
+            info.setItem(idx, 2, self.leftAlignedItem(p))
+        info.setColumnHidden(2, True)
+        print("Sum at global peak:", sumGP, sumGP / 1048576.0, "MB")
         info.setSortingEnabled(True)
-        info.sortItems(0, QtCore.Qt.DescendingOrder)
-        info.sortItems(0, QtCore.Qt.AscendingOrder)
-            
+        info.sortItems(0, Qt.DescendingOrder)
+        info.cellClicked.connect(self.cellClick)
+
         info.horizontalHeader().setStretchLastSection(True)
+        info.setTextElideMode(Qt.ElideNone)
+        info.setWordWrap(True)
+        info.resizeRowsToContents()
+
+        self.stack = stack = MaltQtStack()
+        stack.horizontalHeader().setStretchLastSection(True)
+        stack.setSizePolicy(size)
+        stack.cellClicked.connect(self.fileShow)
+
+        self.fileArea = MaltQtFile()
+        self.fileArea.setSizePolicy(size)
+
+        self.rLayout = rLayout = QVBoxLayout()
+        rLayout.addWidget(self.fileArea)
+        rLayout.addWidget(self.stack)
         self.main_layout = QHBoxLayout()
-        self.main_layout.addWidget(info)
+        self.lLayout = lLayout = QVBoxLayout()
+        self.lLayout.addWidget(info)
+        self.main_layout.addLayout(lLayout)
+        self.main_layout.addLayout(rLayout)
         self.setLayout(self.main_layout)
 
         info.show()
+        self.cellClick(0, 0)
 
     def filterStack(self):
         """Using the contents of the searchbox will filter the current
@@ -141,7 +161,7 @@ class MaltQtGlobalMax(QWidget):
             self.nextB.setEnabled(False)
             return
         elif text == self.lastText:
-            if QApplication.queryKeyboardModifiers() & QtCore.Qt.AltModifier:
+            if QApplication.queryKeyboardModifiers() & Qt.AltModifier:
                 self.filterPrev()
             else:
                 self.filterNext()
@@ -167,13 +187,36 @@ class MaltQtGlobalMax(QWidget):
         self.ifilter = 0
         self.memTableUpdate(self.filterIds[self.ifilter])
 
-    @QtCore.Slot()
+    @Slot()
+    def cellClick(self, row, column):
+        self.info.selectRow(row)
+        stackId = self.info.item(row, 2).text()
+        if stackId in self.data.callsite:
+            stack = [self.data.instrMap[x] for x in self.data.callsite[stackId]]
+            self.stack.updateStack(stack, row, stackId)
+            self.fileShow(0, 0)
+        else:
+            self.stack.update(None, None)
+
+    @Slot()
+    def fileShow(self, row, column):
+        theLine = int(self.stack.item(row, 0).text())
+        stackId = self.stack.item(row, 2).text()
+        theFile = self.data.instrMap[stackId][1].replace(
+            "/yellow/usr/projects/eap/users/lmdm/releases/co/eap/Cassio",
+            "/Users/sriram/codes",
+        )
+        self.stack.selectRow(row)
+        self.fileArea.loadFile(theFile, theLine)
+        print(f"stack={stackId}, line={theLine}, file={theFile}")
+
+    @Slot()
     def filterNext(self):
         """Increments the filter stack and updated the graph"""
         if len(self.filterIds) == 0:
             return
         self.ifilter += (
-            10 if QApplication.queryKeyboardModifiers() & QtCore.Qt.ShiftModifier else 1
+            10 if QApplication.queryKeyboardModifiers() & Qt.ShiftModifier else 1
         )
         if self.ifilter > len(self.filterIds) - 1:
             self.ifilter = len(self.filterIds) - 1
@@ -182,13 +225,13 @@ class MaltQtGlobalMax(QWidget):
         self.prevB.setEnabled(True)
         self.memTableUpdate(self.filterIds[self.ifilter])
 
-    @QtCore.Slot()
+    @Slot()
     def filterPrev(self):
         """Decrements the filter stack and updated the graph"""
         if len(self.filterIds) == 0:
             return
         self.ifilter -= (
-            10 if QApplication.queryKeyboardModifiers() & QtCore.Qt.ShiftModifier else 1
+            10 if QApplication.queryKeyboardModifiers() & Qt.ShiftModifier else 1
         )
         if self.ifilter < 0:
             self.ifilter = 0
@@ -197,7 +240,7 @@ class MaltQtGlobalMax(QWidget):
         self.nextB.setEnabled(True)
         self.memTableUpdate(self.filterIds[self.ifilter])
 
-    @QtCore.Slot()
+    @Slot()
     def timerFire(self):
         """The timer ensures that we don't fire while somebody is
         typing in the search box.  Consequently the code will wait
