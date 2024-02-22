@@ -5,9 +5,10 @@ https://doc.qt.io/qtforpython-6.2/examples/example_widgets__codeeditor.html
 
 Added capability to load different files and hilight specified line
 """
-from PySide6.QtCore import Slot, Qt, QRect, QSize
+from PySide6.QtCore import Slot, Qt, QRect, QSize, Slot
 from PySide6.QtGui import QColor, QPainter, QTextFormat, QTextCursor
 from PySide6.QtWidgets import QPlainTextEdit, QWidget, QTextEdit
+from maltQtPreferences import MaltQtPreferences
 
 
 class LineNumberArea(QWidget):
@@ -32,8 +33,11 @@ class MaltQtFile(QPlainTextEdit):
         self.setTextCursor(myCursor)
         self.centerCursor()
 
-    def loadFile(self, fname, start):
+    def loadFile(self, fname, start, recurse=0):
         try:
+            self.start = start
+            if recurse == 0:
+                self.nowFile = fname
             if fname not in self.known_files:
                 text = open(fname).read()
             else:
@@ -42,8 +46,24 @@ class MaltQtFile(QPlainTextEdit):
             self.goToLine(start)
             self.update_line_number_area_width(start)
             self.known_files[fname] = text
+            self.loaded = 1
         except:
-            self.setPlainText(f"Unable to read file '{fname}'")
+            if recurse == 1 or fname is None:
+                self.loaded = 0
+                self.setPlainText(
+                    f"""
+                Unable to read file '{fname}'
+                Try specifying source directory in 'Preferences' tab
+                """
+                )
+                self.goToLine(3)
+                return
+            else:
+                self.loadFile(MaltQtPreferences.findFile(fname), start, 1)
+
+    @Slot()
+    def reload(self):
+        self.loadFile(self.nowFile, self.start)
 
     def __init__(self, fname=None, start=0):
         super().__init__()

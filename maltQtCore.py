@@ -9,11 +9,16 @@ Author: Sriram Swaminarayan sriram@lanl.gov
 import os
 import sys
 from PySide6 import QtGui
-from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget, QWidget
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QTabWidget,
+)
 
 from maltReaderJSON import MaltReaderJSON
 from maltQtTimeline import MaltQtTimeline
 from maltQtGlobalMax import MaltQtGlobalMax
+from maltQtPreferences import MaltQtPreferences
 
 
 class MaltQtCore:
@@ -43,17 +48,28 @@ class MaltQtCore:
         tabs.setMovable(True)
         tabs.setDocumentMode(True)
 
-        # Initialize timeline view and display it
+        tabs.setStyleSheet("QTabBar {font-size:16pt;background-color:rgb(255,255,230)}")
+        tabs.setStyleSheet(
+            """
+        QTabBar::tab:selected {font-size:18pt;background-color:rgb(255,255,230)} 
+        QTabBar::tab:!selected {font-size:12pt;background-color:rgb(230,230,230)} 
+        """
+        )
+
+        # Now add different tabs
         self.gm = MaltQtGlobalMax(self.window, self.data)
-        tabs.setStyleSheet(
-            "QTabBar::tab:!selected {font-size:14pt;background-color:rgb(200,200,200)}"
-        )
-        tabs.setStyleSheet(
-            "QTabBar::tab:selected {font-size:16pt;background-color:rgb(255,255,230)}"
-        )
-        tabs.addTab(self.gm, "&GlobalMax")
+        tabs.addTab(self.gm, " &GlobalMax")
+
         self.tv = MaltQtTimeline(self.window, self.data)
-        tabs.addTab(self.tv, "&Timeline")
+        tabs.addTab(self.tv, " &Timeline")
+
+        self.prefs = MaltQtPreferences()
+        tabs.addTab(self.prefs, " &Preferences")
+
+        # Connect the preferences dirschanged signal to the reload slot of
+        # Global peak file area
+        self.prefs.dirsChanged.connect(self.gm.fileArea.reload)
+
         # Attach tab to window
         self.window.setCentralWidget(tabs)
         self.window.show()

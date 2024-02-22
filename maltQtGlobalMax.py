@@ -2,26 +2,20 @@
 Display timeline information in a Qt Chart with
 clicks to show stack information.
 """
+import re
 from PySide6.QtCore import Slot, Qt
-from PySide6.QtGui import QPainter, QIcon
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
     QHBoxLayout,
-    QHeaderView,
-    QLineEdit,
-    QToolButton,
     QSizePolicy,
-    QStyle,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
-from PySide6.QtCharts import QLineSeries
 from maltQtStack import MaltQtStack
 from maltQtFile import MaltQtFile
-import re
 
 
 class MaltQtGlobalMax(QWidget):
@@ -199,13 +193,14 @@ class MaltQtGlobalMax(QWidget):
             self.stack.update(None, None)
 
     @Slot()
+    def reloadFile(self):
+        """for when the file search path changes"""
+
+    @Slot()
     def fileShow(self, row, column):
         theLine = int(self.stack.item(row, 0).text())
         stackId = self.stack.item(row, 2).text()
-        theFile = self.data.instrMap[stackId][1].replace(
-            "/yellow/usr/projects/eap/users/lmdm/releases/co/eap/Cassio",
-            "/Users/sriram/codes",
-        )
+        theFile = self.data.instrMap[stackId][1]
         self.stack.selectRow(row)
         self.fileArea.loadFile(theFile, theLine)
         print(f"stack={stackId}, line={theLine}, file={theFile}")
