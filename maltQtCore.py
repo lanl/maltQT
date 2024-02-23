@@ -30,7 +30,7 @@ class MaltQtCore:
             self.setMinimumWidth(800)
             self.setMinimumHeight(900)
 
-    def __init__(self, fname):
+    def __init__(self, fname, sourceDirs=None):
         """
         reads in the json from file and initializes timeline view
         """
@@ -56,41 +56,60 @@ class MaltQtCore:
         )
 
         # Now add different tabs
-        # A tab for stacks at global maximum
-        self.gm = MaltQtGlobalMax(self.data)
-        tabs.addTab(self.gm, " &Global Peak Stacks")
-
-        self.leaks = MaltQtLeaks(self.data)
-        tabs.addTab(self.leaks, " &Leaks")
-
+        # Timeline tab
         self.tv = MaltQtTimeline(self.window, self.data)
         tabs.addTab(self.tv, " &Timeline")
 
-        self.prefs = MaltQtPreferences()
+        # Global Peak tab
+        self.gm = MaltQtGlobalMax(self.data)
+        tabs.addTab(self.gm, " &Global Peak Stacks")
+
+        # Leak tab
+        self.leaks = MaltQtLeaks(self.data)
+        tabs.addTab(self.leaks, " &Leaks")
+
+        # Preferences tab
+        self.prefs = MaltQtPreferences(sourceDirs)
         tabs.addTab(self.prefs, " &Preferences")
 
         # Connect the preferences dirschanged signal to the reload slot of
         # Global peak file area
         self.prefs.dirsChanged.connect(self.gm.fileArea.reload)
 
+        # force update in case sourceDirs is not null
+        if sourceDirs is not None and len(sourceDirs) > 0:
+            self.gm.fileArea.reload()
+
         # Attach tab to window
         self.window.setCentralWidget(tabs)
         self.window.show()
 
-        # Set focus to the searchbox in the timeline
-        # self.tv.searchBox.setFocus()
+        # Set focus to the chart in the timeline
         self.tv.chart_view.setFocus()
 
 
 if __name__ == "__main__":
     import sys
+    import argparse
+
+    # Get list of directories if needed
+    parser = argparse.ArgumentParser(description="maltQtCore")
+    parser.add_argument(
+        "-d",
+        dest="dirs",
+        action="store",
+        help="A list of comma separated directories for source paths",
+    )
+    parser.add_argument("files", help="remainder of command line", nargs="*")
+    args = parser.parse_args()
+    dirs = args.dirs.split(",") if args.dirs is not None else []
 
     # generate the window!
     app = QApplication(sys.argv)
     qtm = []
-    for f in sys.argv[1:]:
+    for f in args.files:
         try:
-            qtm.append(MaltQtCore(f))
+            qtm.append(MaltQtCore(f, dirs))
         except Exception as e:
             print(e)
             print(f"Unable to load file {f}")

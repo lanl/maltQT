@@ -97,8 +97,8 @@ class MaltQtLeaks(QWidget):
 
     @Slot()
     def cellClick(self, row, column):
+        """When a cell is clicked in the leak table display the stack"""
         self.info.selectRow(row)
-        print("type of ", type(self.info.item(row, 3)))
         index = int(self.info.item(row, 3).text())
         stackIdList = self.leaks[index]["stack"]
         stack = [self.data.instrMap[x] for x in stackIdList]
@@ -107,6 +107,7 @@ class MaltQtLeaks(QWidget):
 
     @Slot()
     def fileShow(self, row, column):
+        """When a cell is clicked in the stack table display the file"""
         theLine = int(self.stack.item(row, 0).text())
         stackId = self.stack.item(row, 2).text()
         theFile = self.data.instrMap[stackId][1]

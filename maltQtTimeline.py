@@ -96,11 +96,11 @@ class MaltQtTimeline(QWidget):
 
     def memTableUpdate(self, idx):
         """Updates the information in the memory table"""
-        v = self.values[idx]
         if idx < 0:
             idx = 0
-        elif idx >= len(self.stacks):
-            idx = len(self.stacks) - 1
+        elif idx >= len(self.values):
+            idx = len(self.values) - 1
+        v = self.values[idx]
         if len(v) < self.idxMax:
             tIdx = t = pMem = vMem = rMem = "??"
         else:

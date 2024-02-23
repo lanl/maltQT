@@ -20,7 +20,7 @@ class MaltQtPreferences(QWidget, QObject):
     files = {}  # found files
     dirsChanged = Signal()  # Signal emitted when directories change
 
-    def __init__(self, loadedFiles={}):
+    def __init__(self, initialDirs=None):
         """The only thing in preferences is currently a directory selector"""
         super().__init__()
         self.setToolTip(
@@ -45,8 +45,18 @@ class MaltQtPreferences(QWidget, QObject):
         title.setStyleSheet("QLabel {font-size: 16pt; text-align: center}")
 
         self.searchPaths = searchPaths = QTableWidget()
-        searchPaths.setRowCount(1)
         searchPaths.setColumnCount(1)
+        if initialDirs is not None:
+            for d in initialDirs:
+                self.dirs.append(os.path.abspath(d))
+            self.searchPaths.setRowCount(len(self.dirs) + 1)
+            for idx, entry in enumerate(self.dirs):
+                newItem = leftAlignedItem(entry)
+                self.searchPaths.setItem(idx, 0, newItem)
+            # purge class known files
+            MaltQtPreferences.files = {}
+        else:
+            searchPaths.setRowCount(1)
         searchPaths.setHorizontalHeaderLabels(
             ["Additional Source Directories (click row to add / change)"]
         )
@@ -62,7 +72,6 @@ class MaltQtPreferences(QWidget, QObject):
         layout.addWidget(title)
         layout.addWidget(searchPaths)
         self.setLayout(self.layout)
-        self.loadedFiles = loadedFiles
 
     @Slot()
     def dirSelect(self, row, column):
@@ -88,7 +97,7 @@ class MaltQtPreferences(QWidget, QObject):
         for x in keys:
             if self.files[x] == None:
                 self.files.pop(x)
-        self.searchPaths.setRowCount(self.searchPaths.rowCount() + 1)
+        self.searchPaths.setRowCount(len(self.dirs) + 1)
         self.dirsChanged.emit()
 
     @staticmethod

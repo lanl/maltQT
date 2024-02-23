@@ -28,7 +28,7 @@ class maltQChartView(QChartView):
             return
         self.parentx.markIndex = True
 
-        pen = QPen(QColor("red"))
+        pen = QPen(QColor("pink"))
         pen.setWidth(0.25)
         painter.setPen(pen)
 

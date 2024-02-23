@@ -74,11 +74,11 @@ class MaltQtGlobalMax(QWidget):
         # Widgets are created, now lay them out
         self.lLayout = lLayout = QVBoxLayout()
         self.lLayout.addWidget(info)
-        
+
         self.rLayout = rLayout = QVBoxLayout()
         rLayout.addWidget(self.fileArea)
         rLayout.addWidget(self.stack)
-        
+
         self.main_layout = QHBoxLayout()
         self.main_layout.addLayout(lLayout)
         self.main_layout.addLayout(rLayout)
