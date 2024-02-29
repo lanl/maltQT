@@ -106,6 +106,8 @@ if __name__ == "__main__":
 
     # generate the window!
     app = QApplication(sys.argv)
+    # app.setStyleSheet("color: black; background-color: rgb(200,200,200)");
+
     qtm = []
     for f in args.files:
         try:

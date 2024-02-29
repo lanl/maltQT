@@ -91,6 +91,7 @@ class MaltReaderJSON:
         self.callsite = {}
         self.instrMap = instrMap = {}
         self.nameMap = nameMap = {}
+        self.fileAlloc = {}
         for item, iDict in instr.items():
             if "file" in iDict:
                 idFile = iDict["file"]
@@ -113,25 +114,72 @@ class MaltReaderJSON:
         # An experimental feature that isn't quite working yet
         self.index_()
 
-    def addToIndex_(self, name, count, inclusive, exclusive=0, globalPeak=0):
+        # Update leak information in file allocations
+        self.updateLeakInfo()
+
+    def addToKey(self, theDict, key, value=0):
+        if key not in theDict:
+            theDict[key] = value
+        else:
+            theDict[key] += value
+
+    def updateLeakInfo(self):
+        """Update leak info for leaks"""
+        for l in self.leaks:
+            memory = float(l["memory"])
+            theStack = l["stack"]
+            for stackEntry in theStack:
+                iMap = self.instrMap[stackEntry]
+                name = iMap[0]
+                fname = iMap[1]
+                lineNum = iMap[2]
+                if fname not in self.fileAlloc:
+                    self.fileAlloc[fname] = {
+                        "incl": {},
+                        "excl": {},
+                        "gIncl": {},
+                        "gExcl": {},
+                        "leaks": {},
+                    }
+                falloc = self.fileAlloc[fname]
+                self.addToKey(falloc["leaks"], lineNum, memory)
+
+    def addToIndex_(self, stackEntry, count, inclusive, exclusive=0, globalPeak=0):
         """Enables indexed searching for higher speed"""
-        if name not in self.count:
-            # Add entries in dictionary if they don't exist
-            self.count[name] = 0
-            self.inclusive[name] = 0
-            self.exclusive[name] = 0
-        self.count[name] += count
-        self.inclusive[name] += inclusive
-        self.exclusive[name] += exclusive
+        iMap = self.instrMap[stackEntry]
+        name = iMap[0]
+        fname = iMap[1]
+        lineNum = iMap[2]
+        if stackEntry == "0xe037bb":
+            print(name, lineNum, fname)
+
+        self.addToKey(self.count, name, count)
+        self.addToKey(self.inclusive, name, inclusive)
+        self.addToKey(self.exclusive, name, exclusive)
+
+        if fname not in self.fileAlloc:
+            self.fileAlloc[fname] = {
+                "incl": {},
+                "excl": {},
+                "gIncl": {},
+                "gExcl": {},
+                "leaks": {},
+            }
+        falloc = self.fileAlloc[fname]
+
+        self.addToKey(falloc["incl"], lineNum, inclusive)
+        self.addToKey(falloc["excl"], lineNum, exclusive)
 
         if globalPeak > 0:
             if name not in self.globalPeak:
                 self.globalPeak[name] = [0, 0]
             # always add to inclusive
             self.globalPeak[name][0] += globalPeak
+            self.addToKey(falloc["gIncl"], lineNum, globalPeak)
             if exclusive > 0:
                 # Add exclusive only if exclusive is non-zero
                 self.globalPeak[name][1] += globalPeak
+                self.addToKey(falloc["gExcl"], lineNum, globalPeak)
 
     def index_(self):
         """
@@ -159,8 +207,7 @@ class MaltReaderJSON:
             theStackId = item["stackId"]
             self.callsite[theStackId] = theStack
             for stackEntry in theStack:
-                name = self.instrMap[stackEntry][0]
-                self.addToIndex_(name, count, inclusive, exclusive, globalPeak)
+                self.addToIndex_(stackEntry, count, inclusive, exclusive, globalPeak)
                 # reset exclusive to 0 for lower items in stack
                 exclusive = 0
         print("indexing done")

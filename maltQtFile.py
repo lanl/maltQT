@@ -33,9 +33,14 @@ class MaltQtFile(QPlainTextEdit):
         self.setTextCursor(myCursor)
         self.centerCursor()
 
-    def loadFile(self, fname, start, recurse=0):
+    def setAlloc(self, newAlloc):
+        self.allocations = newAlloc
+
+    def loadFile(self, fname, start, allocs={}, recurse=0):
         try:
+            self.origName = fname
             self.start = start
+            self.setAlloc(allocs)
             if recurse == 0:
                 self.nowFile = fname
             if fname not in self.known_files:
@@ -52,21 +57,22 @@ class MaltQtFile(QPlainTextEdit):
                 self.loaded = 0
                 self.setPlainText(
                     f"""
-                Unable to read file '{fname}'
+                Unable to read file '{self.origName}'
                 Try specifying source directory in 'Preferences' tab
                 """
                 )
                 self.goToLine(3)
                 return
             else:
-                self.loadFile(MaltQtPreferences.findFile(fname), start, 1)
+                self.loadFile(MaltQtPreferences.findFile(fname), start, allocs, 1)
 
     @Slot()
     def reload(self):
-        self.loadFile(self.nowFile, self.start)
+        self.loadFile(self.nowFile, self.start, self.allocations)
 
-    def __init__(self, fname=None, start=0):
+    def __init__(self, fname=None, start=0, allocations=None):
         super().__init__()
+        self.allocations = allocations
         self.line_number_area = LineNumberArea(self)
         self.setLineWrapMode(QPlainTextEdit.NoWrap)
         self.setReadOnly(True)
@@ -74,10 +80,13 @@ class MaltQtFile(QPlainTextEdit):
         self.blockCountChanged[int].connect(self.update_line_number_area_width)
         self.updateRequest[QRect, int].connect(self.update_line_number_area)
         self.cursorPositionChanged.connect(self.highlight_current_line)
-        self.loadFile(fname, start)
+        self.loadFile(fname, start, allocations, 0)
 
     def line_number_area_width(self):
         digits = 1
+        if self.allocations is not None:
+            if len(self.allocations) > 0:
+                digits += 8
         max_num = max(1, self.blockCount())
         while max_num >= 10:
             max_num *= 0.1
@@ -93,6 +102,18 @@ class MaltQtFile(QPlainTextEdit):
         rect = QRect(cr.left(), cr.top(), width, cr.height())
         self.line_number_area.setGeometry(rect)
 
+    def allocationString(self, lineNumber):
+        """return formatted string for given line allocation"""
+        if self.allocations is not None and lineNumber in self.allocations:
+            value = self.allocations[lineNumber]
+            if value < 1024:
+                return f" {value:6.0f}B "
+            elif value < 1048576:
+                return f"{value/1024.:6.1f}kB "
+            else:
+                return f"{value/1048576:6.1f}MB "
+        return f"{' ':9}"
+
     def lineNumberAreaPaintEvent(self, event):
         painter = QPainter(self.line_number_area)
         painter.fillRect(event.rect(), Qt.lightGray)
@@ -104,7 +125,7 @@ class MaltQtFile(QPlainTextEdit):
 
         while block.isValid() and top <= event.rect().bottom():
             if block.isVisible() and bottom >= event.rect().top():
-                number = str(block_number + 1)
+                number = self.allocationString(block_number + 1) + str(block_number + 1)
                 painter.setPen(Qt.black)
                 width = self.line_number_area.width()
                 height = self.fontMetrics().height()

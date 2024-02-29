@@ -27,6 +27,7 @@ class MaltQtLeaks(QWidget):
 
         # Squirrel away data
         self.data = data
+        self.fileAlloc = data.fileAlloc
         leaks = self.leaks = data.leaks
         self.info = info = QTableWidget()
         size = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
@@ -95,6 +96,13 @@ class MaltQtLeaks(QWidget):
         info.show()
         self.cellClick(0, 0)
 
+    def getAlloc(self, theFile):
+        try:
+            retval = self.fileAlloc[theFile]["leaks"]
+        except:
+            retval = {}
+        return retval
+
     @Slot()
     def cellClick(self, row, column):
         """When a cell is clicked in the leak table display the stack"""
@@ -112,5 +120,5 @@ class MaltQtLeaks(QWidget):
         stackId = self.stack.item(row, 2).text()
         theFile = self.data.instrMap[stackId][1]
         self.stack.selectRow(row)
-        self.fileArea.loadFile(theFile, theLine)
+        self.fileArea.loadFile(theFile, theLine, self.getAlloc(theFile))
         print(f"stack={stackId}, line={theLine}, file={theFile}")

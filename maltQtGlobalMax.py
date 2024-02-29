@@ -28,6 +28,7 @@ class MaltQtGlobalMax(QWidget):
 
         # Squirrel away data
         self.data = data
+        self.fileAlloc = data.fileAlloc
         peaks = self.peaks = data.globalPeaks()
         self.info = info = QTableWidget()
         size = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
@@ -98,11 +99,18 @@ class MaltQtGlobalMax(QWidget):
         else:
             self.stack.update(None, None)
 
+    def getAlloc(self, theFile):
+        try:
+            retval = self.fileAlloc[theFile]["gIncl"]
+        except:
+            retval = {}
+        return retval
+
     @Slot()
     def fileShow(self, row, column):
         theLine = int(self.stack.item(row, 0).text())
         stackId = self.stack.item(row, 2).text()
         theFile = self.data.instrMap[stackId][1]
         self.stack.selectRow(row)
-        self.fileArea.loadFile(theFile, theLine)
-        print(f"stack={stackId}, line={theLine}, file={theFile}")
+        self.fileArea.loadFile(theFile, theLine, self.getAlloc(theFile))
+        # print(f"stack={stackId}, line={theLine}, file={theFile}")
