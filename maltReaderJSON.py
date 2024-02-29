@@ -150,9 +150,6 @@ class MaltReaderJSON:
         name = iMap[0]
         fname = iMap[1]
         lineNum = iMap[2]
-        if stackEntry == "0xe037bb":
-            print(name, lineNum, fname)
-
         self.addToKey(self.count, name, count)
         self.addToKey(self.inclusive, name, inclusive)
         self.addToKey(self.exclusive, name, exclusive)

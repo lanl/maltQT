@@ -112,7 +112,8 @@ class MaltQtFile(QPlainTextEdit):
                 return f"{value/1024.:6.1f}kB "
             else:
                 return f"{value/1048576:6.1f}MB "
-        return f"{' ':9}"
+        # return a blank string
+        return " "
 
     def lineNumberAreaPaintEvent(self, event):
         painter = QPainter(self.line_number_area)
