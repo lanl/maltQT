@@ -99,9 +99,12 @@ class MaltQtTimeline(QWidget):
     @QtCore.Slot()
     def cellClick(self, row, column):
         self.info.selectRow(row)
+        self.row = row
         self.fileShow(row)
 
-    def fileShow(self, row):
+    def fileShow(self, row=None):
+        if row is None:
+            row = self.row
         item = self.stack[row]
         theLine = item[2]
         stackId = item[3]
@@ -126,7 +129,8 @@ class MaltQtTimeline(QWidget):
         self.lastIndex = idx
         self.stack_view.updateStack(self.stacks[idx], idx)
         self.stack = self.stacks[idx]
-        self.fileShow(0)
+        self.row = 0
+        self.fTimer.start(250)
         self.markIndex = True
         self.chart.update()
         self.info.setItem(0, 0, self.rightAlignedItem(t))
@@ -300,6 +304,11 @@ class MaltQtTimeline(QWidget):
         self.mTimer = mTimer = QtCore.QTimer()
         mTimer.setSingleShot(True)
         mTimer.timeout.connect(self.filterStack)
+
+        self.fTimer = fTimer = QtCore.QTimer()
+        fTimer.setSingleShot(True)
+        fTimer.timeout.connect(self.fileLoad)
+
         self.stack_view.setFocusPolicy(QtCore.Qt.NoFocus)
         self.info.setFocusPolicy(QtCore.Qt.NoFocus)
         self.ifilter = 0
