@@ -306,7 +306,7 @@ class MaltQtTimeline(QWidget):
 
         self.fTimer = fTimer = QtCore.QTimer()
         fTimer.setSingleShot(True)
-        fTimer.timeout.connect(self.fileLoad)
+        fTimer.timeout.connect(self.fileShow)
 
         self.stack_view.setFocusPolicy(QtCore.Qt.NoFocus)
         self.info.setFocusPolicy(QtCore.Qt.NoFocus)
