@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 from PySide6.QtCharts import QLineSeries
+from maltQtFile import MaltQtFile
 from maltQtStack import MaltQtStack
 from maltQtChart import MaltQtChart, maltQChartView
 import re
@@ -94,6 +95,18 @@ class MaltQtTimeline(QWidget):
         item.setFont("Courier New")
         return item
 
+    @QtCore.Slot()
+    def cellClick(self, row, column):
+        self.info.selectRow(row)
+        self.fileShow(row)
+
+    def fileShow(self, row):
+        item = self.stack[row]
+        theLine = item[2]
+        stackId = item[3]
+        theFile = item[1]
+        self.fileArea.loadFile(theFile, theLine, {})
+
     def memTableUpdate(self, idx):
         """Updates the information in the memory table"""
         if idx < 0:
@@ -111,6 +124,8 @@ class MaltQtTimeline(QWidget):
             rMem = f"{v[self.idxR] / 1048576.0:.3f}"
         self.lastIndex = idx
         self.stack_view.updateStack(self.stacks[idx], idx)
+        self.stack = self.stacks[idx]
+        self.fileShow(0)
         self.markIndex = True
         self.chart.update()
         self.info.setItem(0, 0, self.rightAlignedItem(t))
@@ -157,6 +172,9 @@ class MaltQtTimeline(QWidget):
         self.chart.addSeries(self.vMem)
         self.chart.createDefaultAxes()
 
+        # Create a filew view area
+        self.fileArea = MaltQtFile()
+
         # QWidget Layout
 
         # Left layout: stacks
@@ -183,10 +201,13 @@ class MaltQtTimeline(QWidget):
         size.setHorizontalStretch(1)
         size.setVerticalStretch(27)
         self.stack_view.setSizePolicy(size)
+        self.stack_view.cellClicked.connect(self.cellClick)
 
         # Right layout: chart
         size.setHorizontalStretch(4)
         self.chart_view.setSizePolicy(size)
+        self.fileArea.setSizePolicy(size)
+
         lLayout = QVBoxLayout()
         self.info = info = QTableWidget()
         info.setEditTriggers(QAbstractItemView.NoEditTriggers)
@@ -223,6 +244,8 @@ class MaltQtTimeline(QWidget):
 
         rLayout.addWidget(self.chart_view)
         rLayout.addLayout(rSearchLayout)
+        rLayout.addWidget(self.fileArea)
+
         self.nextB = nextB = QToolButton()
         self.prevB = prevB = QToolButton()
         # icon = QIcon(':/icon_about.png')
