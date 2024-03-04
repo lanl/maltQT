@@ -1,7 +1,7 @@
 """Set preferences"""
 
-from PySide6.QtCore import QObject, Qt, Signal, Slot
-from PySide6.QtWidgets import (
+from PySide2.QtCore import QObject, Qt, Signal, Slot
+from PySide2.QtWidgets import (
     QFileDialog,
     QLabel,
     QTableWidget,

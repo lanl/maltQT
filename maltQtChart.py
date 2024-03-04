@@ -1,10 +1,11 @@
 """ simple feedback on a chart """
-from PySide6.QtGui import QColor, QPainter, QPen
-from PySide6.QtCore import QPointF, QRect, QRectF
-from PySide6.QtCharts import QChart, QChartView
+from PySide2.QtGui import QColor, QPainter, QPen
+from PySide2.QtCore import QPointF, QRect, QRectF
+from PySide2.QtCharts import QtCharts
+#import QChart, QChartView
 
 
-class MaltQtChart(QChart):
+class MaltQtChart(QtCharts.QChart):
     def __init__(self, parentx):
         super().__init__()
         self.parentx = parentx
@@ -16,7 +17,7 @@ class MaltQtChart(QChart):
         self.parentx.click(self.mapToValue(QMouseEvent.pos()))
 
 
-class maltQChartView(QChartView):
+class maltQChartView(QtCharts.QChartView):
     def __init__(self, parentx):
         super().__init__(parentx.chart)
         self.parentx = parentx

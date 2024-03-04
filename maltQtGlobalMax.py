@@ -3,8 +3,8 @@ Display Global peak Memory information.
 Click to show stack information.
 """
 import re
-from PySide6.QtCore import Slot, Qt
-from PySide6.QtWidgets import (
+from PySide2.QtCore import Slot, Qt
+from PySide2.QtWidgets import (
     QAbstractItemView,
     QApplication,
     QHBoxLayout,

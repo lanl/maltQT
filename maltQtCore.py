@@ -8,8 +8,8 @@ Author: Sriram Swaminarayan sriram@lanl.gov
 
 import os
 import sys
-from PySide6 import QtGui
-from PySide6.QtWidgets import (
+from PySide2 import QtGui
+from PySide2.QtWidgets import (
     QApplication,
     QMainWindow,
     QTabWidget,
@@ -42,7 +42,7 @@ class MaltQtCore:
 
         self.window = self.MainWindow(os.path.split(fname)[1])
         self.window.resize(1800, 900)
-        QtGui.qt_set_sequence_auto_mnemonic(True)
+        # QtGui.qt_set_sequence_auto_mnemonic(True)
         # set layout of main window
         tabs = QTabWidget()
         tabs.setTabPosition(QTabWidget.West)
@@ -50,10 +50,16 @@ class MaltQtCore:
         tabs.setDocumentMode(True)
 
         tabs.setStyleSheet(
-            """QTabBar::tab:selected {font-size:18pt;background-color:rgb(255,255,230)} 
-               QTabBar::tab:!selected {font-size:12pt;background-color:rgb(230,230,230)} 
+            """QTabBar::tab:selected {background-color:rgb(255,255,230)} 
+               QTabBar::tab:!selected {background-color:rgb(230,230,230)} 
             """
         )
+
+        # tabs.setStyleSheet(
+        #     """QTabBar::tab:selected {font-size:18pt;background-color:rgb(255,255,230)} 
+        #        QTabBar::tab:!selected {font-size:12pt;background-color:rgb(230,230,230)} 
+        #     """
+        # )
 
         # Now add different tabs
         # Timeline tab
@@ -117,4 +123,4 @@ if __name__ == "__main__":
             print(f"Unable to load file {f}")
             raise e
     if len(qtm) > 0:
-        sys.exit(app.exec())
+        sys.exit(app.exec_())

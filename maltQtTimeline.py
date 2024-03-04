@@ -2,9 +2,9 @@
 Display timeline information in a Qt Chart with
 clicks to show stack information.
 """
-from PySide6 import QtCore
-from PySide6.QtGui import QPainter, QIcon
-from PySide6.QtWidgets import (
+from PySide2 import QtCore
+from PySide2.QtGui import QPainter, QIcon
+from PySide2.QtWidgets import (
     QAbstractItemView,
     QApplication,
     QHBoxLayout,
@@ -18,7 +18,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from PySide6.QtCharts import QLineSeries
+from PySide2.QtCharts import QtCharts
+#from PySide2.QtCharts import QLineSeries
 from maltQtStack import MaltQtStack
 from maltQtChart import MaltQtChart, maltQChartView
 import re
@@ -29,7 +30,7 @@ class MaltQtTimeline(QWidget):
 
     def genSeries(self, label, idx, idy, values, scale=1.0):
         """Given a x and y index into values returns a QLineSeries"""
-        series = QLineSeries()
+        series = QtCharts.QLineSeries()
         series.setName(label)
         idMax = idx if idx > idy else idy
         lastX = values[0][idx]

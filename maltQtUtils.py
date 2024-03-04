@@ -1,6 +1,6 @@
 """ utilities common to all my Qt programs """
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QTableWidgetItem
+from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QTableWidgetItem
 
 
 def rightAlignedItem(theText):

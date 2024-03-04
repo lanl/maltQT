@@ -5,9 +5,9 @@ https://doc.qt.io/qtforpython-6.2/examples/example_widgets__codeeditor.html
 
 Added capability to load different files and hilight specified line
 """
-from PySide6.QtCore import Slot, Qt, QRect, QSize, Slot
-from PySide6.QtGui import QColor, QPainter, QTextFormat, QTextCursor
-from PySide6.QtWidgets import QPlainTextEdit, QWidget, QTextEdit
+from PySide2.QtCore import Slot, Qt, QRect, QSize, Slot
+from PySide2.QtGui import QColor, QPainter, QTextFormat, QTextCursor
+from PySide2.QtWidgets import QPlainTextEdit, QWidget, QTextEdit
 from maltQtPreferences import MaltQtPreferences
 
 

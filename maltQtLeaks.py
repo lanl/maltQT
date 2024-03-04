@@ -3,8 +3,8 @@ Display timeline information in a Qt Chart with
 clicks to show stack information.
 """
 import re
-from PySide6.QtCore import Slot, Qt
-from PySide6.QtWidgets import (
+from PySide2.QtCore import Slot, Qt
+from PySide2.QtWidgets import (
     QAbstractItemView,
     QHBoxLayout,
     QSizePolicy,

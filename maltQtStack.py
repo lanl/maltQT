@@ -1,7 +1,7 @@
 """Create a stack view"""
 
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QTableWidget, QTableWidgetItem
+from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QTableWidget, QTableWidgetItem
 
 
 class MaltQtStack(QTableWidget):
