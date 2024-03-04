@@ -50,14 +50,14 @@ class MaltQtCore:
         tabs.setDocumentMode(True)
 
         tabs.setStyleSheet(
-            """QTabBar::tab:selected {background-color:rgb(255,255,230)} 
+            """QTabBar::tab:selected {background-color:rgb(255,255,200)} 
                QTabBar::tab:!selected {background-color:rgb(230,230,230)} 
             """
         )
 
         # tabs.setStyleSheet(
-        #     """QTabBar::tab:selected {font-size:18pt;background-color:rgb(255,255,230)} 
-        #        QTabBar::tab:!selected {font-size:12pt;background-color:rgb(230,230,230)} 
+        #     """QTabBar::tab:selected {font-size:18pt;background-color:rgb(255,255,230)}
+        #        QTabBar::tab:!selected {font-size:12pt;background-color:rgb(230,230,230)}
         #     """
         # )
 

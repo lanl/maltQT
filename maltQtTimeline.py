@@ -19,7 +19,7 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 from PySide2.QtCharts import QtCharts
-#from PySide2.QtCharts import QLineSeries
+
 from maltQtFile import MaltQtFile
 from maltQtStack import MaltQtStack
 from maltQtChart import MaltQtChart, maltQChartView

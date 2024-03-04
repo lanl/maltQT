@@ -2,7 +2,8 @@
 from PySide2.QtGui import QColor, QPainter, QPen
 from PySide2.QtCore import QPointF, QRect, QRectF
 from PySide2.QtCharts import QtCharts
-#import QChart, QChartView
+
+# import QChart, QChartView
 
 
 class MaltQtChart(QtCharts.QChart):
