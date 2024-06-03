@@ -104,6 +104,8 @@ class MaltQtTimeline(QWidget):
     def fileShow(self, row=None):
         if row is None:
             row = self.row
+        if (row not in self.stack) or (self.stack[row] is None):
+            return
         item = self.stack[row]
         theLine = item[2]
         stackId = item[3]
