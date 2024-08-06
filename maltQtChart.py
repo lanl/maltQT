@@ -1,8 +1,4 @@
 """ simple feedback on a chart """
-from PySide2.QtGui import QColor, QPainter, QPen
-from PySide2.QtCore import QPointF, QRect, QRectF
-from PySide2.QtCharts import QtCharts
-
 # LANL Open Source Release ID O4736
 #
 # Copyright:
@@ -21,10 +17,9 @@ from PySide2.QtCharts import QtCharts
 # This program is released under the BSD-3 license.
 # Please see the README.MD file for more details
 
-from PySide6.QtGui import QColor, QPainter, QPen
-from PySide6.QtCore import QPointF, QRect, QRectF
-from PySide6.QtCharts import QChart, QChartView
-
+from PySide2.QtGui import QColor, QPainter, QPen
+from PySide2.QtCore import QPointF, QRect, QRectF
+from PySide2.QtCharts import QtCharts
 
 class MaltQtChart(QtCharts.QChart):
     def __init__(self, parentx):
