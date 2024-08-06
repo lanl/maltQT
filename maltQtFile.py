@@ -19,6 +19,9 @@ Added capability to load different files and hilight specified line
 # paid-up, irrevocable worldwide license in this material to reproduce,
 # prepare. derivative works, distribute copies to the public, perform
 # publicly and display publicly, and to permit others to do so.
+#
+# This program is released under the BSD-3 license.
+# Please see the README.MD file for more details
 
 from PySide6.QtCore import Slot, Qt, QRect, QSize, Slot
 from PySide6.QtGui import QColor, QPainter, QTextFormat, QTextCursor
