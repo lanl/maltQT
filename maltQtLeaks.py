@@ -32,7 +32,7 @@ from PySide2.QtWidgets import (
     QWidget,
 )
 from maltQtUtils import leftAlignedItem, rightAlignedItem
-from maltQtStack import MaltQtStack
+from maltQtStack import MaltQtStackView
 from maltQtFile import MaltQtFile
 
 
@@ -93,10 +93,9 @@ class MaltQtLeaks(QWidget):
         info.setWordWrap(True)
         info.resizeRowsToContents()
 
-        self.stack = stack = MaltQtStack()
+        self.stack = stack = MaltQtStackView(self)
         stack.horizontalHeader().setStretchLastSection(True)
         stack.setSizePolicy(size)
-        stack.cellClicked.connect(self.fileShow)
 
         self.fileArea = MaltQtFile()
         self.fileArea.setSizePolicy(size)

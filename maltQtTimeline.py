@@ -39,7 +39,7 @@ from PySide2.QtWidgets import (
 from PySide2.QtCharts import QtCharts
 
 from maltQtFile import MaltQtFile
-from maltQtStack import MaltQtStack
+from maltQtStack import MaltQtStackView
 from maltQtChart import MaltQtChart, maltQChartView
 import re
 
@@ -203,7 +203,7 @@ class MaltQtTimeline(QWidget):
         # QWidget Layout
 
         # Left layout: stacks
-        self.stack_view = MaltQtStack()
+        self.stack_view = MaltQtStackView(self)
 
         resize = QHeaderView.ResizeToContents
         self.horizontal_header = self.stack_view.horizontalHeader()
@@ -226,7 +226,6 @@ class MaltQtTimeline(QWidget):
         size.setHorizontalStretch(1)
         size.setVerticalStretch(27)
         self.stack_view.setSizePolicy(size)
-        self.stack_view.cellClicked.connect(self.cellClick)
 
         # Right layout: chart
         size.setHorizontalStretch(4)

@@ -37,9 +37,10 @@ from maltQtTimeline import MaltQtTimeline
 from maltQtGlobalMax import MaltQtGlobalMax
 from maltQtLeaks import MaltQtLeaks
 from maltQtPreferences import MaltQtPreferences
+from maltQtUtils import fileSelect
 
 
-class MaltQtCore:
+class MaltQt:
     class MainWindow(QMainWindow):
         def __init__(self, title="unnamed"):
             super().__init__()
@@ -116,7 +117,7 @@ if __name__ == "__main__":
     import argparse
 
     # Get list of directories if needed
-    parser = argparse.ArgumentParser(description="maltQtCore")
+    parser = argparse.ArgumentParser(description="maltQt")
     parser.add_argument(
         "-d",
         dest="dirs",
@@ -131,13 +132,21 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     # app.setStyleSheet("color: black; background-color: rgb(200,200,200)");
 
+    if len(args.files) == 0:
+        fname = fileSelect(None, myFilter="JSON Files (*.json *.JSON)", exists=True)
+        if fname is not None:
+            args.files = [fname]
     qtm = []
     for f in args.files:
+        print("opening ", f, f is None)
         try:
-            qtm.append(MaltQtCore(f, dirs))
+            qtm.append(MaltQt(f, dirs))
         except Exception as e:
             print(e)
             print(f"Unable to load file {f}")
             raise e
     if len(qtm) > 0:
         sys.exit(app.exec_())
+    else:
+        print("No files specified. Quitting")
+        sys.exit(0)

@@ -36,7 +36,7 @@ you only have PySide2/Qt5 available, use branch `qt5`.
 
 Load up JSON files with optional source directories specified using this command:
 ```
-maltQtCore.py <file1.json> [file2.json file3.json...] [-d /path/to/src,/path/to/src2/,...]
+maltQt.py <file1.json> [file2.json file3.json...] [-d /path/to/src,/path/to/src2/,...]
 ```
 Hover over graphical elements to display tool tips.
 
