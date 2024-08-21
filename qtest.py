@@ -21,10 +21,21 @@ Test qt installation - create window with title
 # Please see the README.MD file for more details
 
 
-from PySide2.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import QApplication, QMainWindow, QLabel
+from PySide6.QtGui import QFont
 
 app = QApplication([])
+a = QFont()
+print(dir(a))
+print(a)
+a.setPointSize(120)
+print(a.defaultFamily())
 window = QMainWindow()
+l = QLabel("hello")
+l.setFont(a)
+l.show()
+
 window.setWindowTitle("Now you see me...")
+
 window.show()
 app.exec_()
