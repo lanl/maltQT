@@ -18,7 +18,7 @@
 # Please see the README.MD file for more details
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QTableWidgetItem
+from PySide6.QtWidgets import QFileDialog, QTableWidgetItem
 
 
 def rightAlignedItem(theText):
@@ -33,3 +33,29 @@ def leftAlignedItem(theText):
     item = QTableWidgetItem(theText)
     item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
     return item
+
+
+def fileSelect(
+    parent,
+    caption="Select File",
+    startDir=None,
+    myFilter=None,
+    exists=False,
+    inOption=None,
+):
+    """Selects a file"""
+    if inOption is None:
+        myOptions = QFileDialog.DontUseNativeDialog
+    else:
+        myOptions = inOption | QFileDialog.DontUseNativeDialog
+
+    if exists:
+        newFile = QFileDialog.getOpenFileName(
+            parent, caption, startDir, filter=myFilter, options=myOptions
+        )
+    else:
+        newFile = QFileDialog.getSaveFileName(
+            parent, caption, startDir, filter=myFilter, options=myOptions
+        )
+    newFile = None if len(newFile[0]) == 0 else newFile[0]
+    return newFile
