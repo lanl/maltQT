@@ -32,7 +32,6 @@ from PySide2.QtWidgets import (
 )
 
 from maltQtUtils import fileSelect
->>>>>>> main
 
 
 class MaltQtStack(QTableWidget):
