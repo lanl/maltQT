@@ -22,6 +22,7 @@ import os
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QFileDialog,
+    QHBoxLayout,
     QMessageBox,
     QPushButton,
     QSizePolicy,
@@ -35,10 +36,11 @@ from maltQtUtils import fileSelect
 
 
 class MaltQtStack(QTableWidget):
-    lastSavedFile = "saved_stacks.csv"
+    lastSavedFile = None
 
-    def __init__(self):
+    def __init__(self, appendButton):
         super().__init__()
+        self.appendButton = appendButton
         self.stack = None
         self.setColumnCount(3)
         self.setRowCount(0)
@@ -63,6 +65,11 @@ class MaltQtStack(QTableWidget):
                 Qt.AlignLeft | Qt.AlignVCenter
             )  # only first column is right aligned
 
+    def showEvent(self, event):
+        # Ensure that append button is in correct state
+        if MaltQtStack.lastSavedFile is not None:
+            self.appendButton.setEnabled(True)
+
     def updateStack(self, stack, index, name=None):
         self.stack = stack
         if name is not None:
@@ -83,19 +90,27 @@ class MaltQtStack(QTableWidget):
                 for idx, x in enumerate(stack):
                     self.setRow(idx, x)
 
-    def save(self, fName=None):
+    def append(self):
+        self.save(fName=MaltQtStack.lastSavedFile, append=True)
+
+    def save(self, fName=None, append=False):
+        if MaltQtStack.lastSavedFile is not None:
+            myDir = "saved_stacks.csv"
+        else:
+            myDir = MaltQtStack.lastSavedFile
+
         if fName is None or type(fName) is type(False):
             fName = fileSelect(
                 self,
-                startDir=MaltQtStack.lastSavedFile,
+                startDir=myDir,
                 inOption=QFileDialog.DontConfirmOverwrite,
             )
             if fName is None:
                 print("File not specified, doing nothing")
                 return
         MaltQtStack.lastSavedFile = fName
-        modeOpen = "w"
-        if os.path.exists(fName):
+        modeOpen = "a" if append else "w"
+        if os.path.exists(fName) and append is False:
             msgBox = QMessageBox(self)
             msgBox.setText(f"File Exists ({os.path.split(fName)[1]})")
             append = msgBox.addButton("Append", QMessageBox.YesRole)
@@ -111,6 +126,8 @@ class MaltQtStack(QTableWidget):
                 modeOpen = "w"
             else:
                 return
+        self.appendButton.setEnabled(True)
+        print("enabled?")
         header = "function,source,line,stackid\n"
         with open(fName, modeOpen) as ofp:
             if modeOpen == "a":
@@ -118,7 +135,9 @@ class MaltQtStack(QTableWidget):
             ofp.write(header)
             for row in self.stack:
                 if type(row) == list:
-                    ofp.write(",".join(['"'+f'{y}'.strip()+'"' for y in row]) + "\n")
+                    ofp.write(
+                        ",".join(['"' + f"{y}".strip() + '"' for y in row]) + "\n"
+                    )
                 else:
                     ofp.write(f"No_Stack,??,-1,??\n")
             print(f"done writing stack to file {fName}")
@@ -131,7 +150,11 @@ class MaltQtStackView(QWidget):
         self.setGeometry(parent.geometry())
 
         # create stack view
-        self.qtstack = MaltQtStack()
+        # the save and append buttons
+        self.saveButton = QPushButton("Save Stack", self)
+        self.appendButton = QPushButton("Append Stack", self)
+        self.appendButton.setEnabled(False)
+        self.qtstack = MaltQtStack(self.appendButton)
         self.qtstack.cellClicked.connect(parent.cellClick)
         self.verticalHeader = self.qtstack.verticalHeader
         self.horizontalHeader = self.qtstack.horizontalHeader
@@ -139,14 +162,16 @@ class MaltQtStackView(QWidget):
         self.setRow = self.qtstack.setRow
         self.updateStack = self.qtstack.updateStack
         self.selectRow = self.qtstack.selectRow
-        # the save button
-        self.button = QPushButton("Save Stack", self)
-        self.button.clicked.connect(self.qtstack.save)
+        self.saveButton.clicked.connect(self.qtstack.save)
+        self.appendButton.clicked.connect(self.qtstack.append)
 
         # create the layout
         self.main_layout = QVBoxLayout()
         self.main_layout.addWidget(self.qtstack)
-        self.main_layout.addWidget(self.button)
+        self.bottom_layout = QHBoxLayout()
+        self.bottom_layout.addWidget(self.saveButton)
+        self.bottom_layout.addWidget(self.appendButton)
+        self.main_layout.addLayout(self.bottom_layout)
         self.setLayout(self.main_layout)
 
     def setSizePolicy(self, size):
