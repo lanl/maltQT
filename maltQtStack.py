@@ -118,7 +118,7 @@ class MaltQtStack(QTableWidget):
             ofp.write(header)
             for row in self.stack:
                 if type(row) == list:
-                    ofp.write(",".join([f"{y}".strip() for y in row]) + "\n")
+                    ofp.write(",".join(['"'+f'{y}'.strip()+'"' for y in row]) + "\n")
                 else:
                     ofp.write(f"No_Stack,??,-1,??\n")
             print(f"done writing stack to file {fName}")
